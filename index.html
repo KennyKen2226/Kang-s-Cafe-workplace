@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>자동 빈칸 만들기</title>
+<title>강상윤 영어카페 업무 Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Gowun+Batang:wght@700&display=swap">
@@ -120,8 +120,8 @@
 <body>
 <header class="head">
   <div class="wrap" style="padding-block: 28px;">
-    <h1>자동 빈칸 만들기</h1>
-    <p style="margin-top:8px;">Word 문서를 올리면 밑줄을 치고 빈칸을 뚫은 문제지와 답지를 Word 파일로 만들어 드립니다.</p>
+    <h1>강상윤 영어카페 업무 Tool</h1>
+    <p style="margin-top:8px;">자동 빈칸 만들기 · 한글이나 Word 문서를 올리면 밑줄을 치고 빈칸을 뚫은 문제지와 답지를 만들어 드립니다.</p>
   </div>
 </header>
 
@@ -129,8 +129,8 @@
 
   <!-- 1 -->
   <section class="card" aria-labelledby="h1s">
-    <h2 id="h1s" class="step-title"><span class="step-no">1</span><span>Word 문서 올리기</span></h2>
-    <p class="muted" style="margin:12px 0 0;">밑줄이 없는 일반 문서를 올리면 프로그램이 빈칸 자리를 골라 밑줄과 빈칸을 만들어 줍니다. 밑줄이 이미 있는 문서는 그 부분을 그대로 씁니다.</p>
+    <h2 id="h1s" class="step-title"><span class="step-no">1</span><span>문서 올리기</span></h2>
+    <p class="muted" style="margin:12px 0 0;">한글(.hwp, .hwpx) 또는 Word(.docx) 파일을 올려 주세요. 밑줄이 없는 일반 문서는 프로그램이 빈칸 자리를 골라 밑줄과 빈칸을 만들어 주고, 밑줄이 이미 있는 문서는 그 부분을 그대로 씁니다.</p>
 
     <label id="dropzone" for="docxFile" class="dz" style="margin-top:20px;">
       <svg class="dz-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -138,10 +138,10 @@
         <path d="M38 8v12h12"/>
         <path d="M32 46V30"/><path d="M25 37l7-7 7 7"/>
       </svg>
-      <p class="dz-title">여기에 Word 파일을 끌어다 놓으세요</p>
-      <p class="muted" style="margin:8px 0 0;">또는 이 칸을 눌러서 파일을 선택하세요 (.docx)</p>
+      <p class="dz-title">여기에 한글 또는 Word 파일을 끌어다 놓으세요</p>
+      <p class="muted" style="margin:8px 0 0;">또는 이 칸을 눌러서 파일을 선택하세요 (.hwp .hwpx .docx)</p>
       <p id="fileStatus" role="status" aria-live="polite" style="margin:14px 0 0; font-weight:700; font-size:1.2rem;"></p>
-      <input id="docxFile" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      <input id="docxFile" type="file" accept=".hwp,.hwpx,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
     </label>
 
     <div id="fileInfo" class="note-ok" hidden></div>
@@ -226,7 +226,7 @@
     <div class="panel">
       <div class="grid-2">
         <div>
-          <label class="label" for="headerText">Word 문서 윗부분에 넣을 글 <span class="opt">(선택)</span></label>
+          <label class="label" for="headerText">문제지·답지 윗부분에 넣을 글 <span class="opt">(선택)</span></label>
           <input id="headerText" type="text" placeholder="예) 강상윤 영어카페 http://cafe.naver.com/ksyenglishhouse" autocomplete="off">
           <p class="muted" style="margin:6px 0 0; font-size:1rem;">저장한 문제지와 답지의 모든 쪽 위에 들어갑니다. 쪽 번호(- 1 -)는 자동으로 아래에 들어갑니다.</p>
         </div>
@@ -266,6 +266,7 @@
       <button id="btnCopy" type="button" class="btn btn-plain">문제 글 복사하기</button>
       <label class="choice" style="padding-inline:6px;"><input id="withAnswers" type="checkbox" checked><span>텍스트·복사에 정답 포함</span></label>
     </div>
+    <p class="muted" style="margin:14px 0 0; font-size:1rem;">저장되는 파일은 Word(.docx) 형식입니다. 한글에서도 열 수 있고, 한글에서 .hwp로 다시 저장할 수 있습니다.</p>
     <p id="saveMsg" class="msg" role="status" aria-live="polite" style="margin:14px 0 0;"></p>
     <textarea id="copyArea" rows="8" readonly hidden aria-label="복사할 글"></textarea>
   </section>
@@ -394,7 +395,13 @@
       paras.push(mkPara(chars, pp));
     }
     while (paras.length && !paras[paras.length - 1].chars.length) paras.pop();
-    return { paras, baseSz: calcBaseSz(paras) };
+    let pageHeader = '';
+    for (const n of Object.keys(zip.files).filter(n => /^word\/header\d*\.xml$/.test(n)).sort()) {
+      const hd = new DP().parseFromString(await zip.file(n).async('string'), 'application/xml');
+      const txt = Array.from(hd.getElementsByTagNameNS(W, 'p')).map(pp => Array.from(pp.getElementsByTagNameNS(W, 't')).map(x => x.textContent).join('')).join(' ').trim();
+      if (txt) { pageHeader = txt; break; }
+    }
+    return { paras, baseSz: calcBaseSz(paras), pageHeader };
   }
 
   function plainModel(text) {
@@ -605,6 +612,216 @@
     });
     return { ranges, spans };
   }
+
+  /* ---- Hangul word processor files: .hwpx (zip + XML) and .hwp (binary, v5) ---- */
+  const HFONT = { '함초롬바탕': 'Batang', 'HCR Batang': 'Batang', '한컴바탕': 'Batang', '함초롬돋움': 'Dotum', 'HCR Dotum': 'Dotum', '한컴돋움': 'Dotum', '신명조': 'Batang', '한양신명조': 'Batang', 'HY신명조': 'Batang', '휴먼명조': 'Batang', '명조': 'Batang' };
+  const mapFont = f => (f ? (HFONT[f] || f) : undefined);
+  const trimEmpty = paras => {
+    while (paras.length && !paras[0].s.trim()) paras.shift();
+    while (paras.length && !paras[paras.length - 1].s.trim()) paras.pop();
+    return paras;
+  };
+
+  async function parseHwpx(zip, DP) {
+    const names = Object.keys(zip.files);
+    const hdrName = names.find(n => /(^|\/)Contents\/header\.xml$/i.test(n));
+    const secNames = names.filter(n => /(^|\/)Contents\/section\d+\.xml$/i.test(n)).sort((a, b) => +a.match(/(\d+)\.xml$/i)[1] - +b.match(/(\d+)\.xml$/i)[1]);
+    if (!secNames.length) throw new Error('no section');
+    const kids = (el, ln) => Array.from(el.children).filter(k => k.localName === ln);
+    const desc = (el, ln) => Array.from(el.getElementsByTagName('*')).filter(k => k.localName === ln);
+    const fonts = { HANGUL: {}, LATIN: {} }, charPr = {}, paraPr = {};
+    if (hdrName) {
+      const hd = new DP().parseFromString(await zip.file(hdrName).async('string'), 'application/xml');
+      desc(hd, 'fontface').forEach(ff => { const lang = ff.getAttribute('lang'); if (fonts[lang]) kids(ff, 'font').forEach(f => { fonts[lang][f.getAttribute('id')] = f.getAttribute('face'); }); });
+      desc(hd, 'charPr').forEach(cp => {
+        const o = {}, h = +cp.getAttribute('height');
+        if (h) o.sz = Math.round(h / 50);
+        const tc = cp.getAttribute('textColor');
+        if (tc && /^#[0-9a-fA-F]{6}$/.test(tc) && tc.toUpperCase() !== '#000000') o.color = tc.slice(1).toUpperCase();
+        const fr = kids(cp, 'fontRef')[0];
+        if (fr) { o.fontH = mapFont(fonts.HANGUL[fr.getAttribute('hangul')]); o.fontL = mapFont(fonts.LATIN[fr.getAttribute('latin')]); }
+        if (kids(cp, 'bold').length) o.b = true;
+        if (kids(cp, 'italic').length) o.i = true;
+        const u = kids(cp, 'underline')[0];
+        if (u && u.getAttribute('type') === 'BOTTOM') o.u = true;
+        charPr[cp.getAttribute('id')] = o;
+      });
+      desc(hd, 'paraPr').forEach(pp => {
+        const o = {};
+        const al = desc(pp, 'align')[0];
+        if (al) { const j = { JUSTIFY: 'both', LEFT: 'left', RIGHT: 'right', CENTER: 'center', DISTRIBUTE: 'both', DISTRIBUTE_SPACE: 'both' }[al.getAttribute('horizontal')]; if (j) o.jc = j; }
+        const mg = desc(pp, 'margin')[0];
+        if (mg) {
+          const gv = ln => { const e = desc(mg, ln)[0]; return e ? +e.getAttribute('value') : 0; };
+          const tw = v => Math.round(v / 5); // HWPUNIT (1/7200 in) -> twips
+          const ind = {}, sp = {};
+          if (gv('left')) ind.left = tw(gv('left'));
+          if (gv('right')) ind.right = tw(gv('right'));
+          if (gv('intent') > 0) ind.firstLine = tw(gv('intent')); else if (gv('intent') < 0) ind.hanging = tw(-gv('intent'));
+          if (gv('prev')) sp.before = tw(gv('prev'));
+          if (gv('next')) sp.after = tw(gv('next'));
+          if (Object.keys(ind).length) o.ind = ind;
+          if (Object.keys(sp).length) o.sp = sp;
+        }
+        const ls = desc(pp, 'lineSpacing')[0];
+        if (ls && ls.getAttribute('type') === 'PERCENT' && +ls.getAttribute('value')) { o.sp = o.sp || {}; o.sp.line = Math.round(240 * +ls.getAttribute('value') / 100); o.sp.lineRule = 'auto'; }
+        paraPr[pp.getAttribute('id')] = o;
+      });
+    }
+    const bad = n => { let x = n.parentNode; while (x && x.nodeType === 1) { if (['header', 'footer', 'footNote', 'endNote'].includes(x.localName)) return true; x = x.parentNode; } return false; };
+    const collect = p => {
+      const chars = [];
+      for (const run of kids(p, 'run')) {
+        const st = { ...(charPr[run.getAttribute('charPrIDRef')] || {}) };
+        let txt = '';
+        for (const t of kids(run, 't')) {
+          for (const node of Array.from(t.childNodes)) {
+            if (node.nodeType === 3) txt += node.nodeValue;
+            else if (node.nodeType === 1) {
+              const ln = node.localName;
+              if (ln === 'tab') txt += '\t'; else if (ln === 'lineBreak') txt += '\n';
+              else if (ln === 'nbSpace' || ln === 'fwSpace') txt += ' '; else if (ln === 'hyphen') txt += '-';
+            }
+          }
+        }
+        for (let i = 0; i < txt.length; i++) chars.push({ ch: txt[i], st });
+      }
+      return chars;
+    };
+    const paras = []; let pageHeader = '';
+    for (const sn of secNames) {
+      const sd = new DP().parseFromString(await zip.file(sn).async('string'), 'application/xml');
+      if (sd.getElementsByTagName('parsererror').length) throw new Error('xml parse error');
+      if (!pageHeader) {
+        const hdr = desc(sd, 'header')[0];
+        if (hdr) pageHeader = desc(hdr, 'p').map(p => collect(p).map(c => c.ch).join('')).join(' ').trim();
+      }
+      for (const p of desc(sd, 'p')) {
+        if (bad(p)) continue;
+        paras.push(mkPara(collect(p), paraPr[p.getAttribute('paraPrIDRef')] || {}));
+      }
+    }
+    trimEmpty(paras);
+    return { paras, baseSz: calcBaseSz(paras), pageHeader };
+  }
+
+  function* hwpRecords(buf) {
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    let p = 0;
+    while (p + 4 <= buf.length) {
+      const h = dv.getUint32(p, true); p += 4;
+      const tag = h & 0x3ff, level = (h >>> 10) & 0x3ff; let size = h >>> 20;
+      if (size === 0xfff) { size = dv.getUint32(p, true); p += 4; }
+      yield { tag, level, data: buf.subarray(p, p + size) };
+      p += size;
+    }
+  }
+  const u16str = (d, off, len) => { let s = ''; for (let i = 0; i < len; i++) s += String.fromCharCode(d[off + i * 2] | (d[off + i * 2 + 1] << 8)); return s; };
+
+  async function parseHwp(u8, CFB, inflate) {
+    const cfb = CFB.parse(u8);
+    const find = path => { const e = CFB.find(cfb, path); return e && e.content ? new Uint8Array(e.content) : null; };
+    const fh = find('/FileHeader');
+    if (!fh || !/^HWP Document File/.test(String.fromCharCode(...fh.slice(0, 17)))) throw new Error('not hwp');
+    const flags = new DataView(fh.buffer, fh.byteOffset, fh.byteLength).getUint32(36, true);
+    if (flags & 2) throw new Error('encrypted');
+    if (flags & 4) throw new Error('distributed');
+    const rd = c => ((flags & 1) ? inflate(c) : c);
+
+    const di = find('/DocInfo');
+    if (!di) throw new Error('no docinfo');
+    const faceNames = [], charShapes = [], paraShapes = []; let map = [];
+    for (const r of hwpRecords(rd(di))) {
+      const d = r.data, dv = new DataView(d.buffer, d.byteOffset, d.byteLength);
+      if (r.tag === 17) { map = []; for (let i = 0; i + 4 <= d.length; i += 4) map.push(dv.getInt32(i, true)); }
+      else if (r.tag === 19) faceNames.push(u16str(d, 3, dv.getUint16(1, true)));
+      else if (r.tag === 21 && d.length >= 56) {
+        const attr = dv.getUint32(46, true);
+        charShapes.push({ faceH: dv.getUint16(0, true), faceL: dv.getUint16(2, true), height: dv.getInt32(42, true), b: !!(attr & 2), i: !!(attr & 1), u: ((attr >> 2) & 3) === 1, color: [d[52], d[53], d[54]] });
+      }
+      else if (r.tag === 25 && d.length >= 24) {
+        const a1 = dv.getUint32(0, true), al = (a1 >> 2) & 7, tw = v => Math.round(v / 5), o = {};
+        const j = { 0: 'both', 1: 'left', 2: 'right', 3: 'center', 4: 'both', 5: 'both' }[al]; if (j) o.jc = j;
+        const l = dv.getInt32(4, true), rr = dv.getInt32(8, true), it = dv.getInt32(12, true), pv = dv.getInt32(16, true), nx = dv.getInt32(20, true);
+        const ind = {}, sp = {};
+        if (l > 0) ind.left = tw(l); if (rr > 0) ind.right = tw(rr);
+        if (it > 0) ind.firstLine = tw(it); else if (it < 0) ind.hanging = tw(-it);
+        if (pv > 0) sp.before = tw(pv); if (nx > 0) sp.after = tw(nx);
+        if (d.length >= 28 && (a1 & 3) === 0) { const pc = dv.getInt32(24, true); if (pc > 0 && pc < 1000) { sp.line = Math.round(240 * pc / 100); sp.lineRule = 'auto'; } }
+        if (Object.keys(ind).length) o.ind = ind; if (Object.keys(sp).length) o.sp = sp;
+        paraShapes.push(o);
+      }
+    }
+    const nH = map[1] || 0;
+    const csCache = {};
+    const csStyle = id => {
+      if (csCache[id]) return csCache[id];
+      const c = charShapes[id]; if (!c) return (csCache[id] = {});
+      const st = { sz: Math.round(c.height / 50) };
+      if (c.b) st.b = true; if (c.i) st.i = true; if (c.u) st.u = true;
+      const hex = c.color.map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+      if (hex !== '000000') st.color = hex;
+      st.fontH = mapFont(faceNames[c.faceH]); st.fontL = mapFont(faceNames[nH + c.faceL]);
+      return (csCache[id] = st);
+    };
+
+    const secs = [];
+    cfb.FullPaths.forEach((fp, i) => { const m = fp.match(/\/BodyText\/Section(\d+)$/); if (m) secs.push({ n: +m[1], c: cfb.FileIndex[i].content }); });
+    if (!secs.length) throw new Error('no body');
+    secs.sort((a, b) => a.n - b.n);
+
+    const paras = []; let pageHeader = '', hdrBuf = '', capLevel = -1;
+    let cp = null;
+    const textOf = (d, shapes) => {
+      const dv = new DataView(d.buffer, d.byteOffset, d.byteLength), n = d.length >> 1, chars = [];
+      let si = 0;
+      const styleAt = pos => { while (si + 1 < shapes.length && shapes[si + 1].pos <= pos) si++; return shapes.length ? csStyle(shapes[si].id) : {}; };
+      let pos = 0;
+      while (pos < n) {
+        const c = dv.getUint16(pos * 2, true);
+        if (c >= 32) { chars.push({ ch: String.fromCharCode(c), st: styleAt(pos) }); pos++; continue; }
+        if (c === 13) break;
+        if (c === 10) { chars.push({ ch: '\n', st: styleAt(pos) }); pos++; continue; }
+        if (c === 24) { chars.push({ ch: '-', st: styleAt(pos) }); pos++; continue; }
+        if (c === 30 || c === 31) { chars.push({ ch: ' ', st: styleAt(pos) }); pos++; continue; }
+        if (c === 0 || (c >= 25 && c <= 29)) { pos++; continue; }
+        if (c === 9) chars.push({ ch: '\t', st: styleAt(pos) });
+        pos += 8; // inline / extended control block (16 bytes)
+      }
+      return chars;
+    };
+    const flush = () => {
+      if (!cp) return;
+      const chars = cp.text ? textOf(cp.text, cp.shapes) : [];
+      if (cp.level === 0) paras.push(mkPara(chars, paraShapes[cp.shapeId] || {}));
+      else if (capLevel >= 0 && cp.level > capLevel) hdrBuf += chars.map(c => c.ch).join('') + ' ';
+      cp = null;
+    };
+    for (const sec of secs) {
+      for (const r of hwpRecords(rd(new Uint8Array(sec.c)))) {
+        const d = r.data;
+        if (capLevel >= 0 && r.level <= capLevel && r.tag !== 66) { flush(); if (!pageHeader) pageHeader = hdrBuf.trim(); capLevel = -1; hdrBuf = ''; }
+        if (r.tag === 66) {
+          flush();
+          const dv = new DataView(d.buffer, d.byteOffset, d.byteLength);
+          cp = { level: r.level, shapeId: dv.getUint16(8, true), text: null, shapes: [] };
+          if (capLevel >= 0 && r.level <= capLevel) { if (!pageHeader) pageHeader = hdrBuf.trim(); capLevel = -1; hdrBuf = ''; }
+        } else if (r.tag === 67 && cp) cp.text = d;
+        else if (r.tag === 68 && cp) {
+          const dv = new DataView(d.buffer, d.byteOffset, d.byteLength);
+          for (let i = 0; i + 8 <= d.length; i += 8) cp.shapes.push({ pos: dv.getUint32(i, true), id: dv.getUint32(i + 4, true) });
+        } else if (r.tag === 71 && d.length >= 4) {
+          flush();
+          if (String.fromCharCode(d[3], d[2], d[1], d[0]) === 'head' && !pageHeader) { capLevel = r.level; hdrBuf = ''; }
+        }
+      }
+      flush();
+      if (capLevel >= 0 && !pageHeader) pageHeader = hdrBuf.trim();
+      capLevel = -1;
+    }
+    trimEmpty(paras);
+    return { paras, baseSz: calcBaseSz(paras), pageHeader };
+  }
 /*PURE-END*/
 
   /* ---------- small helpers ---------- */
@@ -666,6 +883,14 @@
   const getDocx = () => ensure('docx', [
     'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',
     'https://unpkg.com/docx@8.5.0/build/index.umd.js'
+  ]);
+  const getCFB = () => ensure('CFB', [
+    'https://cdn.jsdelivr.net/npm/cfb@1.2.2/dist/cfb.min.js',
+    'https://unpkg.com/cfb@1.2.2/dist/cfb.min.js'
+  ]);
+  const getPako = () => ensure('pako', [
+    'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js',
+    'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js'
   ]);
   getZip(); getDocx();
 
@@ -869,27 +1094,41 @@
     refreshMethod(true); generate();
   }
 
-  async function handleDocx(file) {
+  async function handleFile(file) {
     if (!file) return;
-    if (!/\.docx$/i.test(file.name)) { say('fileStatus', '.docx 파일만 올릴 수 있습니다. Word에서 "다른 이름으로 저장"으로 .docx 형식을 선택해 주세요.'); return; }
+    const ext = ((file.name.match(/\.([^.]+)$/) || [])[1] || '').toLowerCase();
+    if (!['docx', 'hwpx', 'hwp'].includes(ext)) { say('fileStatus', '한글(.hwp, .hwpx) 또는 Word(.docx) 파일만 올릴 수 있습니다.'); return; }
     say('fileStatus', '파일을 읽는 중입니다...');
     try {
-      const JZ = await getZip();
-      if (!JZ) { say('fileStatus', '문서를 읽는 도구를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.'); return; }
-      const zip = await JZ.loadAsync(await file.arrayBuffer());
-      model = await parseDocx(zip, DOMParser);
-      fromDocx = true;
-      baseName = file.name.replace(/\.docx$/i, '');
+      const buf = await file.arrayBuffer();
+      let m;
+      if (ext === 'hwp') {
+        const [C, pk] = await Promise.all([getCFB(), getPako()]);
+        if (!C || !pk) { say('fileStatus', '한글 파일을 읽는 도구를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.'); return; }
+        m = await parseHwp(new Uint8Array(buf), C, c => pk.inflateRaw(c));
+      } else {
+        const JZ = await getZip();
+        if (!JZ) { say('fileStatus', '문서를 읽는 도구를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.'); return; }
+        const zip = await JZ.loadAsync(buf);
+        m = ext === 'hwpx' ? await parseHwpx(zip, DOMParser) : await parseDocx(zip, DOMParser);
+      }
+      model = m; fromDocx = true;
+      baseName = file.name.replace(/\.[^.]+$/, '');
       $('srcInput').value = '';
       setSample(false);
+      let headNote = '';
+      if (m.pageHeader && !$('headerText').value.trim()) { $('headerText').value = m.pageHeader; store.set(HEAD_KEY, m.pageHeader); headNote = ' · 윗부분 글 불러옴'; }
       refreshMethod(true);
       generate();
-      showFileInfo(`${file.name} · 문단 ${model.paras.length}개 · ${underCount ? '밑줄 친 단어 ' + underCount + '개' : '밑줄 없음 (자동으로 빈칸 생성)'}`);
+      showFileInfo(`${file.name} · 문단 ${model.paras.length}개 · ${underCount ? '밑줄 친 단어 ' + underCount + '개' : '밑줄 없음 (자동으로 빈칸 생성)'}${headNote}`);
       say('fileStatus', '불러오기 완료');
-      $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      try { $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
     } catch (err) {
       console.error(err);
-      say('fileStatus', '파일을 읽지 못했습니다. Word에서 다시 저장한 .docx 파일로 시도해 주세요.');
+      const c = err && err.message;
+      if (c === 'encrypted') say('fileStatus', '암호가 걸린 한글 파일은 읽을 수 없습니다. 한글에서 암호를 해제하고 다시 저장해 주세요.');
+      else if (c === 'distributed') say('fileStatus', '배포용 문서는 읽을 수 없습니다. 한글에서 일반 문서로 저장한 뒤 올려 주세요.');
+      else say('fileStatus', '파일을 읽지 못했습니다. 한글에서 "다른 이름으로 저장"으로 .hwpx(또는 .docx) 형식으로 저장한 뒤 올려 주세요.');
     }
   }
 
@@ -905,11 +1144,12 @@
     o.spacing = { before: sp.before ?? 0, after: sp.after ?? 100, line: sp.line ?? 340, lineRule: sp.lineRule || 'auto' };
     return o;
   }
+  const fontFor = (st, t) => ((/[가-힣]/.test(t) ? (st.fontH || st.font) : (st.fontL || st.font)) || DEFAULT_FONT);
   function runsToDocx(d, runs) {
     const out = [];
     runs.forEach(r => {
       const st = r.st || {};
-      const base = { font: st.font || DEFAULT_FONT, size: st.sz || DEFAULT_SZ };
+      const base = { font: fontFor(st, r.t), size: st.sz || DEFAULT_SZ };
       if (st.b) base.bold = true;
       if (st.i) base.italics = true;
       if (st.color) base.color = st.color;
@@ -1017,11 +1257,11 @@
     r.readAsText(f, 'UTF-8');
     e.target.value = '';
   });
-  $('docxFile').addEventListener('change', e => { handleDocx(e.target.files[0]); e.target.value = ''; });
+  $('docxFile').addEventListener('change', e => { handleFile(e.target.files[0]); e.target.value = ''; });
   const dz = $('dropzone');
   ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
-  dz.addEventListener('drop', e => handleDocx(e.dataTransfer.files[0]));
+  dz.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
   window.addEventListener('dragover', e => e.preventDefault());
   window.addEventListener('drop', e => e.preventDefault());
 
@@ -1058,4 +1298,3 @@
 </script>
 </body>
 </html>
-
