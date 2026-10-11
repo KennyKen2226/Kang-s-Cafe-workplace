@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자동 빈칸 만들기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Gowun+Batang:wght@700&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+  /* Layout: single reading column, three numbered steps (upload, settings, result), large controls for older users */
+  :root {
+    --bg: #eef1ee;
+    --card: #ffffff;
+    --fg: #1d2624;
+    --muted: #56635f;
+    --line: #c9d3cf;
+    --accent: #0f6b5c;
+    --accent-hover: #0b5549;
+    --on-accent: #ffffff;
+    --soft: #dcebe6;
+    --soft-hover: #cbe0d9;
+    --secondary: #e3e8e5;
+    --secondary-hover: #d5dcd8;
+    --blank: #b4400c;
+    --blank-soft: #fde8d6;
+    --field: #ffffff;
+    --ok-bg: #cdeed5;
+    --ok-fg: #14532d;
+    --header-bg: #0f3d36;
+    --header-fg: #f1f7f5;
+    --header-sub: #b7d4cc;
+    --font-body: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+    --font-display: 'Gowun Batang', 'Noto Serif KR', 'Batang', serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101615; --card: #182120; --fg: #e6eeeb; --muted: #9db0aa; --line: #2f4140;
+      --accent: #3fbfa5; --accent-hover: #58d0b8; --on-accent: #06231d;
+      --soft: #22403a; --soft-hover: #2b524a; --secondary: #243230; --secondary-hover: #2e403d;
+      --blank: #ffab7a; --blank-soft: #4a2e1e; --field: #101615; --ok-bg: #1f4a2c; --ok-fg: #a7f0bd;
+      --header-bg: #0b2a25; --header-fg: #e6f3ef; --header-sub: #8fb5ab;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101615; --card: #182120; --fg: #e6eeeb; --muted: #9db0aa; --line: #2f4140;
+    --accent: #3fbfa5; --accent-hover: #58d0b8; --on-accent: #06231d;
+    --soft: #22403a; --soft-hover: #2b524a; --secondary: #243230; --secondary-hover: #2e403d;
+    --blank: #ffab7a; --blank-soft: #4a2e1e; --field: #101615; --ok-bg: #1f4a2c; --ok-fg: #a7f0bd;
+    --header-bg: #0b2a25; --header-fg: #e6f3ef; --header-sub: #8fb5ab;
+    color-scheme: dark;
+  }
+
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 18px; line-height: 1.6; margin: 0; }
+  .wrap { max-width: 64rem; margin-inline: auto; padding-inline: 16px; }
+  .head { background: var(--header-bg); color: var(--header-fg); }
+  .head h1 { font-family: var(--font-display); font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1.2; margin: 0; text-wrap: balance; }
+  .head p { color: var(--header-sub); margin: 0; font-size: 1.15rem; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
+  @media (min-width: 768px) { .card { padding: 32px; } }
+  .step-title { display: flex; align-items: center; gap: 12px; font-size: clamp(1.4rem, 4.5vw, 1.8rem); font-weight: 900; margin: 0; }
+  .step-no { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+  .opt { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+  textarea, select, input[type=text] { width: 100%; min-width: 0; box-sizing: border-box; background: var(--field); color: var(--fg); border: 2px solid var(--line); border-radius: 14px; padding: 14px 16px; font: inherit; font-size: 1.15rem; }
+  textarea:focus, select:focus, input[type=text]:focus { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 14px; font: inherit; font-weight: 700; cursor: pointer; padding: 14px 22px; min-height: 52px; text-align: center; }
+  .btn:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-soft { background: var(--soft); color: var(--fg); }
+  .btn-soft:hover { background: var(--soft-hover); }
+  .btn-plain { background: var(--secondary); color: var(--fg); }
+  .btn-plain:hover { background: var(--secondary-hover); }
+  .btn-xl { font-size: clamp(1.4rem, 5vw, 1.8rem); font-weight: 900; padding: 20px 24px; min-height: 72px; width: 100%; }
+  .btn-lg { font-size: 1.25rem; font-weight: 900; padding: 18px 22px; min-height: 64px; width: 100%; }
+  .tog[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+
+  .dz { display: block; cursor: pointer; border: 4px dashed var(--accent); background: var(--soft); border-radius: 24px; text-align: center; padding: 48px 20px; transition: background .15s, transform .15s; }
+  .dz:hover { background: var(--soft-hover); }
+  .dz:focus-within { outline: 3px solid var(--fg); outline-offset: 3px; }
+  .dz.drag { background: var(--soft-hover); transform: scale(1.01); border-style: solid; }
+  .dz-icon { width: 76px; height: 76px; margin: 0 auto 12px; color: var(--accent); }
+  .dz-title { font-size: clamp(1.4rem, 5vw, 1.9rem); font-weight: 900; margin: 0; text-wrap: balance; }
+  @keyframes ring { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); } 50% { box-shadow: 0 0 0 12px transparent; } }
+  @media (prefers-reduced-motion: no-preference) { .dz:not(.drag) { animation: ring 2.4s infinite; } }
+
+  input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 26px; height: 26px; flex: none; }
+  input[type=range] { accent-color: var(--accent); width: 100%; height: 32px; }
+  .choice { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 4px 0; }
+  .label { font-weight: 700; font-size: 1.2rem; margin: 0 0 8px; display: block; }
+  details > summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+  details > summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .preview { min-height: 200px; border: 2px solid var(--line); border-radius: 16px; padding: 20px; background: var(--field); font-size: 1.2rem; line-height: 2.1; overflow-wrap: anywhere; }
+  .preview p { margin: 0 0 6px; white-space: pre-wrap; }
+  .blank { display: inline-block; min-width: 5.5ch; height: 1em; border-bottom: 2px solid var(--blank); margin: 0 2px; vertical-align: baseline; }
+  .blank-input { max-width: 70vw; border: 0; border-bottom: 3px solid var(--blank); background: var(--blank-soft); color: var(--blank); font: inherit; font-weight: 700; text-align: center; padding: 2px 4px; margin: 0 4px; outline: none; border-radius: 6px 6px 0 0; }
+  .blank-input:focus { outline: 3px solid var(--accent); }
+  .blank-input.ok { background: var(--ok-bg); border-bottom-color: var(--ok-fg); color: var(--ok-fg); }
+  .ul { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
+
+  .note { border-radius: 14px; padding: 12px 16px; background: var(--blank-soft); color: var(--fg); border: 1px solid var(--blank); margin-top: 16px; }
+  .note-ok { border-radius: 14px; padding: 12px 16px; background: var(--soft); color: var(--fg); border: 1px solid var(--accent); margin-top: 16px; font-weight: 700; }
+  .msg { min-height: 1.6em; font-weight: 700; }
+  .grid-2 { display: grid; grid-template-columns: 1fr; gap: 28px; }
+  @media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; gap: 32px 40px; } }
+  .grid-2 > * { min-width: 0; }
+  .btn-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 768px) { .btn-row { grid-template-columns: 1fr 1fr; } }
+  .row-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
+  .panel { border-top: 2px solid var(--line); margin-top: 24px; padding-top: 24px; }
+</style>
+</head>
+<body>
+<header class="head">
+  <div class="wrap" style="padding-block: 28px;">
+    <h1>자동 빈칸 만들기</h1>
+    <p style="margin-top:8px;">밑줄 친 Word 문서를 올리면 문제지와 답지를 Word 파일로 만들어 드립니다.</p>
+  </div>
+</header>
+
+<main class="wrap" style="padding-block: 28px 48px; display:flex; flex-direction:column; gap:28px;">
+
+  <!-- 1 -->
+  <section class="card" aria-labelledby="h1s">
+    <h2 id="h1s" class="step-title"><span class="step-no">1</span><span>Word 문서 올리기</span></h2>
+    <p class="muted" style="margin:12px 0 0;">빈칸으로 만들 부분에 밑줄을 친 Word 파일을 올려 주세요. 밑줄 친 단어가 빈칸이 되고, 원래 문서는 답지가 됩니다.</p>
+
+    <label id="dropzone" for="docxFile" class="dz" style="margin-top:20px;">
+      <svg class="dz-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8h20l12 12v34a2 2 0 0 1-2 2H18a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/>
+        <path d="M38 8v12h12"/>
+        <path d="M32 46V30"/><path d="M25 37l7-7 7 7"/>
+      </svg>
+      <p class="dz-title">여기에 Word 파일을 끌어다 놓으세요</p>
+      <p class="muted" style="margin:8px 0 0;">또는 이 칸을 눌러서 파일을 선택하세요 (.docx)</p>
+      <p id="fileStatus" role="status" aria-live="polite" style="margin:14px 0 0; font-weight:700; font-size:1.2rem;"></p>
+      <input id="docxFile" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </label>
+
+    <div id="fileInfo" class="note-ok" hidden></div>
+    <div id="sampleNote" class="note">지금 화면에 보이는 결과는 <b>예시 문서</b>입니다. Word 파일을 올리면 바뀝니다.</div>
+
+    <details id="pasteBox" style="margin-top:20px;">
+      <summary>Word 파일이 없으면 글을 직접 붙여넣기</summary>
+      <p class="muted" style="margin:8px 0 12px;">붙여넣은 글에는 밑줄 정보가 없어서 프로그램이 자동으로 빈칸을 고릅니다.</p>
+      <textarea id="srcInput" rows="8" placeholder="여기에 글을 붙여넣으세요."></textarea>
+    </details>
+    <div class="row-wrap" style="margin-top:12px;">
+      <button id="btnClear" type="button" class="btn btn-plain">내용 모두 지우기</button>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="card" aria-labelledby="h2s">
+    <h2 id="h2s" class="step-title"><span class="step-no">2</span><span>빈칸 설정</span></h2>
+
+    <div style="margin-top:20px;">
+      <p class="label">빈칸 만드는 방법</p>
+      <label class="choice"><input type="radio" name="method" value="underline" checked><span>문서에서 밑줄 친 부분을 빈칸으로 <span class="muted">(추천)</span></span></label>
+      <label class="choice"><input type="radio" name="method" value="auto"><span>프로그램이 자동으로 고르기</span></label>
+      <p id="methodNote" class="muted" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div id="autoPanel" class="panel" hidden>
+      <p class="label">기준 단어·문장 <span class="opt">(선택)</span></p>
+      <p class="muted" style="margin:0 0 12px;">꼭 빈칸으로 만들고 싶은 단어를 한 줄에 하나씩 적으세요. 비워 두면 프로그램이 알아서 고릅니다.</p>
+      <textarea id="refInput" rows="3" placeholder="예) experience&#10;future"></textarea>
+      <div class="row-wrap" style="margin-top:12px;">
+        <label class="btn btn-plain" for="refFile" style="cursor:pointer;">텍스트 파일(.txt)에서 불러오기</label>
+        <input id="refFile" type="file" accept=".txt,text/plain" hidden>
+      </div>
+
+      <div class="grid-2" style="margin-top:28px;">
+        <div>
+          <p class="label">어떤 단어를 고를까요?</p>
+          <label class="choice"><input type="radio" name="mode" value="both" checked><span>기준 단어 + 자동 선택</span></label>
+          <label class="choice"><input type="radio" name="mode" value="reference"><span>기준 단어만</span></label>
+          <label class="choice"><input type="radio" name="mode" value="auto"><span>자동 선택만</span></label>
+        </div>
+        <div>
+          <p class="label">빈칸 개수: <span id="ratioLabel" style="color:var(--accent);">20%</span></p>
+          <input id="ratio" type="range" min="5" max="60" step="5" value="20" aria-label="빈칸 비율">
+          <div class="muted" style="display:flex; justify-content:space-between;"><span>적게</span><span>많이</span></div>
+        </div>
+        <div>
+          <p class="label">빈칸 대상</p>
+          <label class="choice"><input id="tKo" type="checkbox" checked><span>한글 단어 (명사 위주)</span></label>
+          <label class="choice"><input id="tEn" type="checkbox" checked><span>영어 단어</span></label>
+          <label class="choice"><input id="tNum" type="checkbox"><span>숫자</span></label>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div>
+            <label class="label" for="freq">어떤 빈도의 단어를 고를까요?</label>
+            <select id="freq">
+              <option value="high">자주 나오는 핵심 단어 (추천)</option>
+              <option value="low">한두 번 나오는 단어</option>
+              <option value="random">상관없이 무작위</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="minLen">최소 글자 수</label>
+            <select id="minLen">
+              <option value="2">2글자 이상</option>
+              <option value="3" selected>3글자 이상</option>
+              <option value="4">4글자 이상</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="choice"><input id="allOcc" type="checkbox" checked><span>같은 단어는 모두 빈칸으로</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="grid-2">
+        <div>
+          <label class="label" for="headerText">Word 문서 윗부분에 넣을 글 <span class="opt">(선택)</span></label>
+          <input id="headerText" type="text" placeholder="예) 강상윤 영어카페 http://cafe.naver.com/ksyenglishhouse" autocomplete="off">
+          <p class="muted" style="margin:6px 0 0; font-size:1rem;">저장한 문제지와 답지의 모든 쪽 위에 들어갑니다. 쪽 번호(- 1 -)는 자동으로 아래에 들어갑니다.</p>
+        </div>
+        <div>
+          <p class="label">화면에서 보이는 빈칸 모양</p>
+          <label class="choice"><input type="radio" name="style" value="line" checked><span>밑줄 (직접 쓰는 문제지)</span></label>
+          <label class="choice"><input type="radio" name="style" value="input"><span>입력칸 (화면에서 풀어보기)</span></label>
+        </div>
+      </div>
+    </div>
+
+    <button id="btnGen" type="button" class="btn btn-primary btn-xl" style="margin-top:32px;">빈칸 만들기</button>
+  </section>
+
+  <!-- 3 -->
+  <section class="card" aria-labelledby="h3s">
+    <h2 id="h3s" class="step-title"><span class="step-no">3</span><span>미리보기와 저장</span></h2>
+    <p id="stats" class="muted" style="margin:12px 0 0;"></p>
+
+    <div class="row-wrap" style="margin-top:16px;">
+      <button id="btnViewP" type="button" class="btn btn-plain tog" aria-pressed="true">문제지 보기</button>
+      <button id="btnViewA" type="button" class="btn btn-plain tog" aria-pressed="false">답지 보기</button>
+      <button id="btnReshuffle" type="button" class="btn btn-plain" hidden>다시 섞기</button>
+    </div>
+
+    <div id="preview" class="preview" style="margin-top:18px;" aria-live="polite"></div>
+
+    <div class="btn-row" style="margin-top:24px;">
+      <button id="btnProb" type="button" class="btn btn-primary btn-lg">문제지 Word(.docx) 저장</button>
+      <button id="btnAns" type="button" class="btn btn-soft btn-lg">답지 Word(.docx) 저장</button>
+    </div>
+    <div style="margin-top:14px;">
+      <button id="btnZip" type="button" class="btn btn-soft btn-lg">문제지 + 답지 한 번에 저장 (.zip)</button>
+    </div>
+    <div class="row-wrap" style="margin-top:14px;">
+      <button id="btnTxt" type="button" class="btn btn-plain">텍스트(.txt)로 저장</button>
+      <button id="btnCopy" type="button" class="btn btn-plain">문제 글 복사하기</button>
+      <label class="choice" style="padding-inline:6px;"><input id="withAnswers" type="checkbox" checked><span>텍스트·복사에 정답 포함</span></label>
+    </div>
+    <p id="saveMsg" class="msg" role="status" aria-live="polite" style="margin:14px 0 0;"></p>
+    <textarea id="copyArea" rows="8" readonly hidden aria-label="복사할 글"></textarea>
+  </section>
+
+  <p class="muted" style="text-align:center; margin:0; font-size:1rem;">밑줄 친 단어의 일부만 밑줄이 쳐져 있어도 단어 전체가 빈칸이 됩니다. 결과는 저장하기 전에 한 번 확인해 주세요.</p>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+/*PURE-START*/
+  const BLANK = '__________';
+  const DEFAULT_FONT = 'Batang';
+  const DEFAULT_SZ = 22;
+  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+  const clean = o => { const r = {}; for (const k in (o || {})) if (o[k] !== undefined) r[k] = o[k]; return r; };
+  const first = (el, ln) => { if (!el) return null; for (const k of el.children) if (k.localName === ln) return k; return null; };
+  const wAttr = (el, name) => { if (!el) return null; const v = el.getAttributeNS(W, name); return v !== null && v !== '' ? v : el.getAttribute('w:' + name); };
+  const onoff = el => { const v = wAttr(el, 'val'); return !(v === '0' || v === 'false' || v === 'off'); };
+  const num = (el, n) => { const v = wAttr(el, n); return v === null || v === '' || isNaN(+v) ? undefined : +v; };
+
+  function parseRPr(r) {
+    const o = {}; if (!r) return o;
+    for (const k of r.children) {
+      switch (k.localName) {
+        case 'b': o.b = onoff(k); break;
+        case 'i': o.i = onoff(k); break;
+        case 'u': { const v = wAttr(k, 'val'); o.u = v ? v !== 'none' : true; break; }
+        case 'color': { const v = wAttr(k, 'val'); if (v && v !== 'auto' && /^[0-9a-fA-F]{6}$/.test(v)) o.color = v.toUpperCase(); break; }
+        case 'sz': { const v = num(k, 'val'); if (v) o.sz = v; break; }
+        case 'rFonts': { const f = wAttr(k, 'ascii') || wAttr(k, 'hAnsi') || wAttr(k, 'eastAsia'); if (f) o.font = f; break; }
+      }
+    }
+    return o;
+  }
+  function parsePPr(p) {
+    const o = {}; if (!p) return o;
+    for (const k of p.children) {
+      switch (k.localName) {
+        case 'jc': o.jc = wAttr(k, 'val'); break;
+        case 'pStyle': o.styleId = wAttr(k, 'val'); break;
+        case 'ind': {
+          const left = num(k, 'left') ?? num(k, 'start');
+          const right = num(k, 'right') ?? num(k, 'end');
+          o.ind = clean({ left, right, firstLine: num(k, 'firstLine'), hanging: num(k, 'hanging') });
+          break;
+        }
+        case 'spacing': o.sp = clean({ before: num(k, 'before'), after: num(k, 'after'), line: num(k, 'line'), lineRule: wAttr(k, 'lineRule') || undefined }); break;
+      }
+    }
+    return o;
+  }
+  function mergePP(a, b) {
+    a = a || {}; b = b || {};
+    return clean({ jc: b.jc ?? a.jc, ind: { ...clean(a.ind), ...clean(b.ind) }, sp: { ...clean(a.sp), ...clean(b.sp) } });
+  }
+  function parseStyles(xml, DP) {
+    const out = { map: {}, dRun: {}, dPara: {}, defP: null };
+    if (!xml) return out;
+    const d = new DP().parseFromString(xml, 'application/xml');
+    const dd = d.getElementsByTagNameNS(W, 'docDefaults')[0];
+    if (dd) {
+      out.dRun = parseRPr(first(first(dd, 'rPrDefault'), 'rPr'));
+      out.dPara = parsePPr(first(first(dd, 'pPrDefault'), 'pPr'));
+    }
+    for (const s of Array.from(d.getElementsByTagNameNS(W, 'style'))) {
+      const id = wAttr(s, 'styleId'); if (!id) continue;
+      out.map[id] = { basedOn: wAttr(first(s, 'basedOn'), 'val'), r: parseRPr(first(s, 'rPr')), p: parsePPr(first(s, 'pPr')) };
+      if (wAttr(s, 'type') === 'paragraph' && wAttr(s, 'default') === '1') out.defP = id;
+    }
+    return out;
+  }
+  function resolveStyle(S, id) {
+    const chain = []; let cur = id, g = 0;
+    while (cur && S.map[cur] && g++ < 20) { chain.unshift(S.map[cur]); cur = S.map[cur].basedOn; }
+    let R = {}, P = {};
+    chain.forEach(s => { R = { ...R, ...clean(s.r) }; P = mergePP(P, s.p); });
+    return { r: R, p: P };
+  }
+  const mkPara = (chars, pp) => ({ chars, pp: pp || {}, s: chars.map(c => c.ch).join('') });
+  function calcBaseSz(paras) {
+    const cnt = {}; let best = DEFAULT_SZ, bn = 0;
+    paras.forEach(P => P.chars.forEach(c => { const z = c.st.sz || DEFAULT_SZ; cnt[z] = (cnt[z] || 0) + 1; if (cnt[z] > bn) { bn = cnt[z]; best = z; } }));
+    return best;
+  }
+
+  async function parseDocx(zip, DP) {
+    const f = zip.file('word/document.xml');
+    if (!f) throw new Error('no document.xml');
+    const doc = new DP().parseFromString(await f.async('string'), 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('xml parse error');
+    const sf = zip.file('word/styles.xml');
+    const S = parseStyles(sf ? await sf.async('string') : null, DP);
+    const body = doc.getElementsByTagNameNS(W, 'body')[0];
+    if (!body) throw new Error('no body');
+    const isW = (n, ln) => n && n.namespaceURI === W && n.localName === ln;
+    const ownerP = n => { let x = n.parentNode; while (x && !isW(x, 'p')) x = x.parentNode; return x; };
+    const hasAnc = (n, lns, stop) => { let x = n.parentNode; while (x && x !== stop) { if (x.namespaceURI === W && lns.includes(x.localName)) return true; x = x.parentNode; } return false; };
+
+    const paras = [];
+    for (const p of Array.from(body.getElementsByTagNameNS(W, 'p'))) {
+      if (hasAnc(p, ['txbxContent'], null)) continue;
+      const direct = parsePPr(first(p, 'pPr'));
+      const sty = resolveStyle(S, direct.styleId || S.defP);
+      const pp = mergePP(mergePP(S.dPara, sty.p), direct);
+      const chars = [];
+      for (const r of Array.from(p.getElementsByTagNameNS(W, 'r'))) {
+        if (ownerP(r) !== p || hasAnc(r, ['del', 'moveFrom'], p)) continue;
+        const rPr = first(r, 'rPr');
+        const rs = wAttr(first(rPr, 'rStyle'), 'val');
+        const rsr = rs ? clean(resolveStyle(S, rs).r) : {};
+        if (rs === 'Hyperlink') delete rsr.u;
+        const st = clean({ ...clean(S.dRun), ...clean(sty.r), ...rsr, ...parseRPr(rPr) });
+        let txt = '';
+        for (const k of r.children) {
+          if (k.namespaceURI !== W) continue;
+          if (k.localName === 't') txt += k.textContent;
+          else if (k.localName === 'tab') txt += '\t';
+          else if (k.localName === 'br' || k.localName === 'cr') txt += '\n';
+          else if (k.localName === 'noBreakHyphen') txt += '-';
+        }
+        for (let i = 0; i < txt.length; i++) chars.push({ ch: txt[i], st });
+      }
+      paras.push(mkPara(chars, pp));
+    }
+    while (paras.length && !paras[paras.length - 1].chars.length) paras.pop();
+    return { paras, baseSz: calcBaseSz(paras) };
+  }
+
+  function plainModel(text) {
+    const paras = text.replace(/\r/g, '').split('\n').map(line => {
+      const st = {}; const chars = [];
+      for (let i = 0; i < line.length; i++) chars.push({ ch: line[i], st });
+      return mkPara(chars, {});
+    });
+    while (paras.length && !paras[paras.length - 1].chars.length) paras.pop();
+    return { paras, baseSz: DEFAULT_SZ };
+  }
+  function parseMarkup(src) { // '# ' = heading, [[...]] = underlined
+    const paras = src.split('\n').map(raw => {
+      let line = raw, head = false;
+      if (line.startsWith('# ')) { head = true; line = line.slice(2); }
+      const st0 = head ? { b: true, sz: 28 } : {};
+      const stU = { ...st0, u: true };
+      const chars = [];
+      const push = (t, st) => { for (let i = 0; i < t.length; i++) chars.push({ ch: t[i], st }); };
+      const re = /\[\[(.+?)\]\]/g; let last = 0, m;
+      while ((m = re.exec(line))) { push(line.slice(last, m.index), st0); push(m[1], stU); last = m.index + m[0].length; }
+      push(line.slice(last), st0);
+      return mkPara(chars, head || !line ? {} : { jc: 'both', ind: { firstLine: 200 } });
+    });
+    return { paras, baseSz: DEFAULT_SZ };
+  }
+
+  function underlineRanges(P) {
+    const s = P.s, out = []; const re = /\S+/g; let m;
+    while ((m = re.exec(s))) {
+      const t = m[0];
+      const mm = t.match(/^([^\p{L}\p{N}]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u);
+      const a = m.index + mm[1].length, b = a + mm[2].length;
+      if (b <= a) continue;
+      let any = false;
+      for (let i = a; i < b; i++) if (P.chars[i].st.u) { any = true; break; }
+      if (any) out.push({ start: a, end: b });
+    }
+    return out;
+  }
+  function group(segs) {
+    const out = [];
+    for (const s of segs) {
+      const l = out[out.length - 1];
+      if (l && !s.blank && !l.blank && l.st === s.st && !!l.u === !!s.u) l.t += s.t;
+      else out.push({ ...s });
+    }
+    return out;
+  }
+  function buildSheets(paras, rr) {
+    const prob = [], ans = [], answers = [];
+    paras.forEach((P, pi) => {
+      const R = rr[pi] || [], n = P.chars.length, s = P.s;
+      const uf = new Uint8Array(n);
+      R.forEach((r, k) => {
+        for (let i = r.start; i < r.end; i++) uf[i] = 1;
+        if (k + 1 < R.length) {
+          const gap = s.slice(r.end, R[k + 1].start);
+          if (gap && /^[  ]+$/.test(gap)) for (let i = r.end; i < R[k + 1].start; i++) uf[i] = 1;
+        }
+      });
+      const aseg = [];
+      for (let i = 0; i < n; i++) aseg.push({ t: P.chars[i].ch, st: P.chars[i].st, u: !!uf[i] });
+      const pseg = []; let i = 0;
+      R.forEach(r => {
+        for (; i < r.start; i++) pseg.push({ t: P.chars[i].ch, st: P.chars[i].st });
+        const a = s.slice(r.start, r.end);
+        pseg.push({ t: BLANK, st: P.chars[r.start].st, blank: true, a });
+        answers.push(a);
+        i = r.end;
+      });
+      for (; i < n; i++) pseg.push({ t: P.chars[i].ch, st: P.chars[i].st });
+      prob.push({ pp: P.pp, runs: group(pseg) });
+      ans.push({ pp: P.pp, runs: group(aseg) });
+    });
+    return { prob, ans, answers, total: answers.length };
+  }
+/*PURE-END*/
+
+  /* ---------- small helpers ---------- */
+  const STOP = new Set(['그리고','하지만','그러나','그래서','때문에','있습니다','합니다','입니다','있는','하는','되는','같은','이런','그런','저런','우리','여러','모든','또한','매우','가장','통해','대한','위해','경우','이것','그것','저것','다음','이후','이전','한다','있다','없다','다른','어떤','무엇','때문','정도','사용','the','and','for','with','that','this','are','was','were','from','have','has','not','but','you','your','its','can','will','all','any','our','their','they','them','then','than','when','what','who','how','why','which','been','being','also','into','about','would','could','should','there','here','just','very','more','most','some','such','only','other','each']);
+  const JOSA = ['에서는','에게서','으로는','이라는','까지는','에서','에게','까지','부터','처럼','보다','이다','이며','라고','하고','으로','한테','마다','조차','께서','이나','와','과','은','는','이','가','을','를','의','에','도','로','만','께'].sort((a, b) => b.length - a.length);
+  const VERBLIKE = /(다|요|니다|하고|하여|해서|으며|지만|면서)$/;
+  const REF_KEY = 'blankmaker.refWords';
+  const HEAD_KEY = 'blankmaker.headerText';
+  const SAMPLE_REF = '';
+  const SAMPLE_SRC = [
+    '# A Short Talk About Reading',
+    'Hi, everyone. My name is Hana, [[and]] I am the leader [[of]] a school reading club. I am glad [[to have been invited]] to give a talk. Many students [[ask me about]] good books, so today I will talk about the value [[of reading]] every day.',
+    '',
+    '# I was [[fond of]] comics',
+    'One rainy afternoon, I [[was looking for]] a quiet place to rest. I found a small library [[and decided to]] go inside. Reading was difficult [[at first]], [[but]] after a few months, I became a fast reader. I felt tired [[but]] happy [[when I was]] finished with each book. [[Whenever]] I finished one, I [[told myself]], “Keep going.”'
+  ].join('\n');
+
+  let seed = Math.floor(Math.random() * 1e9);
+  let model = null;          // { paras, baseSz } from docx / sample / pasted text
+  let fromDocx = false;      // model came from a real Word file or the sample (has underline info)
+  let view = 'problem';
+  let cur = null;
+  let baseName = '예시';
+  let sampleActive = false;
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  function rng() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const say = (id, text) => { $(id).textContent = text; };
+
+  /* ---------- libraries (CDN allowlist, second source as fallback) ---------- */
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  async function ensure(globalName, urls) {
+    if (window[globalName]) return window[globalName];
+    for (const u of urls) {
+      try { await loadScript(u); if (window[globalName]) return window[globalName]; } catch (e) {}
+    }
+    return null;
+  }
+  const getZip = () => ensure('JSZip', [
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+  ]);
+  const getDocx = () => ensure('docx', [
+    'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',
+    'https://unpkg.com/docx@8.5.0/build/index.umd.js'
+  ]);
+  getZip(); getDocx();
+
+  /* ---------- automatic word choice (used when there is no underline) ---------- */
+  function stripJosa(raw) {
+    for (const s of JOSA) if (raw.endsWith(s) && raw.length - s.length >= 2) return raw.slice(0, -s.length);
+    return raw;
+  }
+  function tokenize(text) {
+    const re = /[가-힣]+|[A-Za-z][A-Za-z'’-]*|\d[\d,.]*/g;
+    const out = []; let m;
+    while ((m = re.exec(text))) {
+      const raw = m[0]; let type, stem = raw;
+      if (/^[가-힣]/.test(raw)) { type = 'ko'; stem = stripJosa(raw); }
+      else if (/^[A-Za-z]/.test(raw)) { type = 'en'; stem = raw.replace(/['’-]+$/, ''); }
+      else { type = 'num'; stem = raw.replace(/[,.]+$/, ''); }
+      out.push({ start: m.index, end: m.index + stem.length, stem, key: stem.toLowerCase(), type, verb: type === 'ko' && VERBLIKE.test(raw) });
+    }
+    return out;
+  }
+  function opts() {
+    return {
+      mode: document.querySelector('input[name=mode]:checked').value,
+      ratio: +$('ratio').value,
+      ko: $('tKo').checked, en: $('tEn').checked, num: $('tNum').checked,
+      freq: $('freq').value, minLen: +$('minLen').value,
+      allOcc: $('allOcc').checked
+    };
+  }
+  function eligible(t, o, loose) {
+    if (!o[t.type]) return false;
+    if (STOP.has(t.key) || t.verb) return false;
+    if (t.type === 'ko') return t.stem.length >= (loose ? 2 : o.minLen);
+    if (t.type === 'en') return t.stem.length >= Math.max(3, loose ? 3 : o.minLen + 1);
+    return t.stem.replace(/\D/g, '').length >= 1;
+  }
+  function autoRanges(paras, o, refText) {
+    const toks = paras.map(P => tokenize(P.s));
+    const refKeys = new Set();
+    tokenize(refText).forEach(t => {
+      if (!STOP.has(t.key) && !t.verb && t.stem.length >= 2) refKeys.add(t.key);
+    });
+    const stats = new Map();
+    toks.forEach(arr => arr.forEach(t => {
+      const isRef = refKeys.has(t.key);
+      if (!eligible(t, o, isRef)) return;
+      if (!stats.has(t.key)) stats.set(t.key, { key: t.key, count: 0, len: t.stem.length, ref: isRef });
+      stats.get(t.key).count++;
+    }));
+    const all = [...stats.values()];
+    const refHits = all.filter(w => w.ref), others = all.filter(w => !w.ref);
+    const N = Math.max(1, Math.round(all.length * o.ratio / 100));
+    const rank = list => {
+      const arr = shuffle(list.slice());
+      if (o.freq === 'random') return arr;
+      arr.sort((a, b) => o.freq === 'high' ? (b.count - a.count) || (b.len - a.len) : (a.count - b.count) || (b.len - a.len));
+      return arr;
+    };
+    let chosen;
+    if (o.mode === 'reference') chosen = refHits;
+    else if (o.mode === 'auto') chosen = rank(all).slice(0, N);
+    else chosen = refHits.concat(rank(others).slice(0, Math.max(0, N - refHits.length)));
+    const set = new Set(chosen.map(w => w.key));
+    const seen = new Set();
+    const ranges = toks.map(arr => {
+      const R = [];
+      arr.forEach(t => {
+        if (!set.has(t.key)) return;
+        if (!o.allOcc && seen.has(t.key)) return;
+        seen.add(t.key); R.push({ start: t.start, end: t.end });
+      });
+      return R;
+    });
+    return { ranges, candidates: all.length };
+  }
+
+  /* ---------- generate + preview ---------- */
+  let underCount = 0;
+  const method = () => document.querySelector('input[name=method]:checked').value;
+  function currentModel() { return fromDocx && model ? model : plainModel($('srcInput').value); }
+
+  function refreshMethod(preferUnderline) {
+    const m = currentModel();
+    underCount = m.paras.reduce((n, P) => n + underlineRanges(P).length, 0);
+    const uRadio = document.querySelector('input[name=method][value=underline]');
+    const aRadio = document.querySelector('input[name=method][value=auto]');
+    uRadio.disabled = underCount === 0;
+    if (underCount === 0) {
+      aRadio.checked = true;
+      say('methodNote', m.paras.length ? '이 문서에는 밑줄 친 부분이 없어서 자동으로 고르는 방법을 사용합니다.' : '');
+    } else {
+      if (preferUnderline) uRadio.checked = true;
+      say('methodNote', `밑줄 친 단어가 ${underCount}개 있습니다.`);
+    }
+    $('autoPanel').hidden = method() !== 'auto';
+    $('btnReshuffle').hidden = method() !== 'auto';
+  }
+
+  function generate() {
+    const m = currentModel();
+    $('autoPanel').hidden = method() !== 'auto';
+    $('btnReshuffle').hidden = method() !== 'auto';
+    let rr, candidates = null;
+    if (method() === 'underline') rr = m.paras.map(underlineRanges);
+    else { const a = autoRanges(m.paras, opts(), $('refInput').value); rr = a.ranges; candidates = a.candidates; }
+    cur = { ...buildSheets(m.paras, rr), baseSz: m.baseSz, method: method(), candidates, hasText: m.paras.some(P => P.chars.length) };
+    renderPreview();
+  }
+
+  function visibleColor(hex) {
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return l > 0.2 && l < 0.8;
+  }
+  function stStyle(st) {
+    let css = '';
+    if (st.b) css += 'font-weight:700;';
+    if (st.i) css += 'font-style:italic;';
+    if (st.sz) { const f = Math.min(2.2, Math.max(0.7, st.sz / (cur.baseSz || DEFAULT_SZ))); if (Math.abs(f - 1) > 0.05) css += `font-size:${f.toFixed(2)}em;`; }
+    if (st.color && visibleColor(st.color)) css += `color:#${st.color};`;
+    return css;
+  }
+  function ppStyle(pp) {
+    let css = '';
+    if (pp.jc === 'both') css += 'text-align:justify;';
+    else if (pp.jc === 'center') css += 'text-align:center;';
+    else if (pp.jc === 'right' || pp.jc === 'end') css += 'text-align:right;';
+    const ind = pp.ind || {};
+    const px = tw => Math.max(0, Math.min(240, Math.round(tw / 20 * 1.33)));
+    if (ind.left) css += `padding-left:${px(ind.left)}px;`;
+    if (ind.right) css += `padding-right:${px(ind.right)}px;`;
+    if (ind.firstLine) css += `text-indent:${px(ind.firstLine)}px;`;
+    return css;
+  }
+
+  function renderPreview() {
+    const box = $('preview');
+    if (!cur || !cur.hasText) {
+      box.innerHTML = '<p class="muted">Word 파일을 올리면 이곳에 결과가 나타납니다.</p>';
+      say('stats', ''); return;
+    }
+    const sheet = view === 'answer' ? cur.ans : cur.prob;
+    const asInput = view === 'problem' && document.querySelector('input[name=style]:checked').value === 'input';
+    let html = '';
+    sheet.forEach(P => {
+      if (!P.runs.length) { html += '<div style="height:1.2em"></div>'; return; }
+      html += `<p style="${ppStyle(P.pp)}">`;
+      P.runs.forEach(r => {
+        if (r.blank) {
+          html += asInput
+            ? `<input class="blank-input" data-a="${esc(r.a)}" aria-label="빈칸" style="width:${Math.max(5, r.a.length * 1.4)}ch" autocomplete="off">`
+            : '<span class="blank"></span>';
+        } else {
+          const css = stStyle(r.st || {});
+          const t = esc(r.t);
+          html += view === 'answer' && r.u ? `<span class="ul" style="${css}">${t}</span>` : (css ? `<span style="${css}">${t}</span>` : t);
+        }
+      });
+      html += '</p>';
+    });
+    box.innerHTML = html;
+    box.querySelectorAll('.blank-input').forEach(inp => inp.addEventListener('input', () => {
+      inp.classList.toggle('ok', inp.value.trim().toLowerCase() === inp.dataset.a.toLowerCase());
+    }));
+    if (cur.total === 0) say('stats', cur.method === 'underline' ? '밑줄 친 부분이 없어서 빈칸이 없습니다.' : '빈칸으로 만들 단어를 찾지 못했습니다. 설정을 바꿔 보세요.');
+    else say('stats', cur.method === 'underline' ? `밑줄 친 단어 ${cur.total}개를 빈칸으로 만들었습니다.` : `빈칸 ${cur.total}개 · 빈칸이 될 수 있는 단어 ${cur.candidates}종류`);
+    $('btnViewP').setAttribute('aria-pressed', view === 'problem');
+    $('btnViewA').setAttribute('aria-pressed', view === 'answer');
+  }
+
+  let timer;
+  const regen = () => { clearTimeout(timer); timer = setTimeout(generate, 250); };
+
+  /* ---------- loading a model ---------- */
+  function setSample(on) { sampleActive = on; $('sampleNote').hidden = !on; }
+  function showFileInfo(text) { const el = $('fileInfo'); el.hidden = !text; el.textContent = text || ''; }
+
+  function loadSample() {
+    model = parseMarkup(SAMPLE_SRC); fromDocx = true; baseName = '예시';
+    $('srcInput').value = '';
+    setSample(true); showFileInfo('');
+    refreshMethod(true); generate();
+  }
+
+  async function handleDocx(file) {
+    if (!file) return;
+    if (!/\.docx$/i.test(file.name)) { say('fileStatus', '.docx 파일만 올릴 수 있습니다. Word에서 "다른 이름으로 저장"으로 .docx 형식을 선택해 주세요.'); return; }
+    say('fileStatus', '파일을 읽는 중입니다...');
+    try {
+      const JZ = await getZip();
+      if (!JZ) { say('fileStatus', '문서를 읽는 도구를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.'); return; }
+      const zip = await JZ.loadAsync(await file.arrayBuffer());
+      model = await parseDocx(zip, DOMParser);
+      fromDocx = true;
+      baseName = file.name.replace(/\.docx$/i, '');
+      $('srcInput').value = '';
+      setSample(false);
+      refreshMethod(true);
+      generate();
+      showFileInfo(`${file.name} · 문단 ${model.paras.length}개 · ${underCount ? '밑줄 친 단어 ' + underCount + '개' : '밑줄 없음'}`);
+      say('fileStatus', '불러오기 완료');
+      $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error(err);
+      say('fileStatus', '파일을 읽지 못했습니다. Word에서 다시 저장한 .docx 파일로 시도해 주세요.');
+    }
+  }
+
+  /* ---------- Word / text output ---------- */
+  function paraOpts(d, pp) {
+    const A = d.AlignmentType, o = {};
+    if (pp.jc === 'both' || pp.jc === 'distribute') o.alignment = A.JUSTIFIED;
+    else if (pp.jc === 'center') o.alignment = A.CENTER;
+    else if (pp.jc === 'right' || pp.jc === 'end') o.alignment = A.RIGHT;
+    const ind = clean(pp.ind);
+    if (Object.keys(ind).length) o.indent = ind;
+    const sp = pp.sp || {};
+    o.spacing = { before: sp.before ?? 0, after: sp.after ?? 100, line: sp.line ?? 340, lineRule: sp.lineRule || 'auto' };
+    return o;
+  }
+  function runsToDocx(d, runs) {
+    const out = [];
+    runs.forEach(r => {
+      const st = r.st || {};
+      const base = { font: st.font || DEFAULT_FONT, size: st.sz || DEFAULT_SZ };
+      if (st.b) base.bold = true;
+      if (st.i) base.italics = true;
+      if (st.color) base.color = st.color;
+      if (r.u && !r.blank) base.underline = { type: 'single' };
+      r.t.split(/(\n|\t)/).forEach(piece => {
+        if (piece === '') return;
+        if (piece === '\n') out.push(new d.TextRun({ ...base, break: 1 }));
+        else if (piece === '\t') out.push(new d.TextRun({ ...base, children: d.Tab ? [new d.Tab()] : ['    '] }));
+        else out.push(new d.TextRun({ ...base, text: piece }));
+      });
+    });
+    if (!out.length) out.push(new d.TextRun({ text: '', font: DEFAULT_FONT, size: DEFAULT_SZ }));
+    return out;
+  }
+  async function makeDocx(kind) {
+    const d = await getDocx();
+    if (!d) throw new Error('docx library');
+    const sheet = kind === 'problem' ? cur.prob : cur.ans;
+    const children = sheet.map(P => new d.Paragraph({ ...paraOpts(d, P.pp), children: runsToDocx(d, P.runs) }));
+    const sec = {
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1700, bottom: 1300, left: 1247, right: 1247, header: 709, footer: 709 } } },
+      children,
+      footers: { default: new d.Footer({ children: [new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [new d.TextRun({ children: ['- ', d.PageNumber.CURRENT, ' -'], font: DEFAULT_FONT, size: 20 })] })] }) }
+    };
+    const ht = $('headerText').value.trim();
+    if (ht) {
+      const runs = ht.split(/(https?:\/\/\S+)/).filter(Boolean).map(part => /^https?:\/\//.test(part)
+        ? new d.TextRun({ text: part, bold: true, size: 28, color: '0000FF', underline: { type: 'single' }, font: 'Malgun Gothic' })
+        : new d.TextRun({ text: part, bold: true, size: 28, font: 'Malgun Gothic' }));
+      sec.headers = { default: new d.Header({ children: [new d.Paragraph({ children: runs })] }) };
+    }
+    const doc = new d.Document({ styles: { default: { document: { run: { font: DEFAULT_FONT, size: DEFAULT_SZ } } } }, sections: [sec] });
+    return d.Packer.toBlob(doc);
+  }
+  function buildText() {
+    let n = 0;
+    let t = cur.prob.map(P => P.runs.map(r => r.blank ? `(${++n}) ${BLANK}` : r.t).join('')).join('\n');
+    if ($('withAnswers').checked) t += '\n\n==== 정답 ====\n' + cur.answers.map((a, i) => `(${i + 1}) ${a}`).join('\n');
+    return t;
+  }
+  function ready() {
+    if (!cur || !cur.hasText) { say('saveMsg', '먼저 Word 파일을 올려 주세요.'); return false; }
+    if (!cur.total) { say('saveMsg', '빈칸이 없습니다. 밑줄 친 문서를 올리거나 설정을 바꿔 주세요.'); return false; }
+    return true;
+  }
+  async function saveFile(filename, data) {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    say('saveMsg', '저장했습니다: ' + filename + ' (다운로드 폴더를 확인하세요)');
+    return true;
+  }
+  async function saveDocx(kind) {
+    if (!ready()) return;
+    say('saveMsg', 'Word 파일을 만드는 중입니다...');
+    try {
+      const blob = await makeDocx(kind);
+      await saveFile(`${baseName}_${kind === 'problem' ? '문제지' : '답지'}.docx`, blob);
+    } catch (err) {
+      console.error(err);
+      say('saveMsg', 'Word 파일을 만들지 못했습니다. 인터넷 연결을 확인하거나 텍스트 저장을 이용해 주세요.');
+    }
+  }
+  async function saveZip() {
+    if (!ready()) return;
+    say('saveMsg', '문제지와 답지를 만드는 중입니다...');
+    try {
+      const JZ = await getZip();
+      if (!JZ) throw new Error('jszip');
+      const [p, a] = await Promise.all([makeDocx('problem'), makeDocx('answer')]);
+      const z = new JZ();
+      z.file(`${baseName}_문제지.docx`, p);
+      z.file(`${baseName}_답지.docx`, a);
+      const blob = await z.generateAsync({ type: 'blob' });
+      await saveFile(`${baseName}_문제지_답지.zip`, blob);
+    } catch (err) {
+      console.error(err);
+      say('saveMsg', '파일을 만들지 못했습니다. 문제지와 답지를 따로 저장해 보세요.');
+    }
+  }
+
+  /* ---------- events ---------- */
+  $('btnGen').onclick = () => { refreshMethod(false); generate(); };
+  $('btnReshuffle').onclick = () => { seed = Math.floor(Math.random() * 1e9); generate(); };
+  $('btnViewP').onclick = () => { view = 'problem'; renderPreview(); };
+  $('btnViewA').onclick = () => { view = 'answer'; renderPreview(); };
+  $('ratio').oninput = () => { $('ratioLabel').textContent = $('ratio').value + '%'; regen(); };
+  $('refInput').addEventListener('input', () => { store.set(REF_KEY, $('refInput').value); regen(); });
+  $('headerText').addEventListener('input', () => store.set(HEAD_KEY, $('headerText').value));
+  $('srcInput').addEventListener('input', () => {
+    fromDocx = false; model = null; setSample(false); showFileInfo('');
+    baseName = '붙여넣은글';
+    refreshMethod(false); regen();
+  });
+  ['tKo', 'tEn', 'tNum', 'freq', 'minLen', 'allOcc'].forEach(id => $(id).addEventListener('change', regen));
+  document.querySelectorAll('input[name=mode],input[name=style],input[name=method]').forEach(e => e.addEventListener('change', generate));
+
+  $('refFile').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { $('refInput').value = r.result; store.set(REF_KEY, r.result); regen(); };
+    r.readAsText(f, 'UTF-8');
+    e.target.value = '';
+  });
+  $('docxFile').addEventListener('change', e => { handleDocx(e.target.files[0]); e.target.value = ''; });
+  const dz = $('dropzone');
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', e => handleDocx(e.dataTransfer.files[0]));
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => e.preventDefault());
+
+  $('btnClear').onclick = () => {
+    model = null; fromDocx = false; $('srcInput').value = '';
+    setSample(false); showFileInfo(''); say('fileStatus', ''); say('saveMsg', '');
+    refreshMethod(false); generate();
+  };
+  $('btnProb').onclick = () => saveDocx('problem');
+  $('btnAns').onclick = () => saveDocx('answer');
+  $('btnZip').onclick = saveZip;
+  $('btnTxt').onclick = () => { if (ready()) saveFile(baseName + '_문제지.txt', '﻿' + buildText()); };
+  $('btnCopy').onclick = async () => {
+    if (!ready()) return;
+    const text = buildText();
+    try {
+      await navigator.clipboard.writeText(text);
+      say('saveMsg', '복사했습니다. Word나 메모장에 붙여넣으세요.');
+      $('copyArea').hidden = true;
+    } catch (e) {
+      const ta = $('copyArea');
+      ta.value = text; ta.hidden = false; ta.focus(); ta.select();
+      say('saveMsg', '아래 글이 선택되었습니다. 길게 눌러(또는 Ctrl+C) 복사해 주세요.');
+    }
+  };
+
+  /* ---------- first view: a working example ---------- */
+  const savedRef = store.get(REF_KEY);
+  $('refInput').value = savedRef !== null ? savedRef : SAMPLE_REF;
+  const savedHead = store.get(HEAD_KEY);
+  if (savedHead) $('headerText').value = savedHead;
+  loadSample();
+})();
+</script>
+</body>
+</html>
