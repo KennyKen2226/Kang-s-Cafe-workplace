@@ -121,7 +121,7 @@
 <header class="head">
   <div class="wrap" style="padding-block: 28px;">
     <h1>자동 빈칸 만들기</h1>
-    <p style="margin-top:8px;">밑줄 친 Word 문서를 올리면 문제지와 답지를 Word 파일로 만들어 드립니다.</p>
+    <p style="margin-top:8px;">Word 문서를 올리면 밑줄을 치고 빈칸을 뚫은 문제지와 답지를 Word 파일로 만들어 드립니다.</p>
   </div>
 </header>
 
@@ -130,7 +130,7 @@
   <!-- 1 -->
   <section class="card" aria-labelledby="h1s">
     <h2 id="h1s" class="step-title"><span class="step-no">1</span><span>Word 문서 올리기</span></h2>
-    <p class="muted" style="margin:12px 0 0;">빈칸으로 만들 부분에 밑줄을 친 Word 파일을 올려 주세요. 밑줄 친 단어가 빈칸이 되고, 원래 문서는 답지가 됩니다.</p>
+    <p class="muted" style="margin:12px 0 0;">밑줄이 없는 일반 문서를 올리면 프로그램이 빈칸 자리를 골라 밑줄과 빈칸을 만들어 줍니다. 밑줄이 이미 있는 문서는 그 부분을 그대로 씁니다.</p>
 
     <label id="dropzone" for="docxFile" class="dz" style="margin-top:20px;">
       <svg class="dz-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -163,37 +163,44 @@
 
     <div style="margin-top:20px;">
       <p class="label">빈칸 만드는 방법</p>
-      <label class="choice"><input type="radio" name="method" value="underline" checked><span>문서에서 밑줄 친 부분을 빈칸으로 <span class="muted">(추천)</span></span></label>
-      <label class="choice"><input type="radio" name="method" value="auto"><span>프로그램이 자동으로 고르기</span></label>
+      <label class="choice"><input type="radio" name="method" value="grammar" checked><span>자동으로 고르기: 문법·표현 중심 <span class="muted">(영어 교재용, 추천)</span></span></label>
+      <label class="choice"><input type="radio" name="method" value="vocab"><span>자동으로 고르기: 핵심 단어 중심 <span class="muted">(한글 문서도 가능)</span></span></label>
+      <label class="choice"><input type="radio" name="method" value="underline"><span>문서에 이미 있는 밑줄을 그대로 사용</span></label>
       <p id="methodNote" class="muted" style="margin:8px 0 0;"></p>
     </div>
 
     <div id="autoPanel" class="panel" hidden>
-      <p class="label">기준 단어·문장 <span class="opt">(선택)</span></p>
-      <p class="muted" style="margin:0 0 12px;">꼭 빈칸으로 만들고 싶은 단어를 한 줄에 하나씩 적으세요. 비워 두면 프로그램이 알아서 고릅니다.</p>
-      <textarea id="refInput" rows="3" placeholder="예) experience&#10;future"></textarea>
-      <div class="row-wrap" style="margin-top:12px;">
-        <label class="btn btn-plain" for="refFile" style="cursor:pointer;">텍스트 파일(.txt)에서 불러오기</label>
-        <input id="refFile" type="file" accept=".txt,text/plain" hidden>
-      </div>
-
-      <div class="grid-2" style="margin-top:28px;">
+      <div class="grid-2">
         <div>
-          <p class="label">어떤 단어를 고를까요?</p>
-          <label class="choice"><input type="radio" name="mode" value="both" checked><span>기준 단어 + 자동 선택</span></label>
-          <label class="choice"><input type="radio" name="mode" value="reference"><span>기준 단어만</span></label>
-          <label class="choice"><input type="radio" name="mode" value="auto"><span>자동 선택만</span></label>
-        </div>
-        <div>
-          <p class="label">빈칸 개수: <span id="ratioLabel" style="color:var(--accent);">20%</span></p>
-          <input id="ratio" type="range" min="5" max="60" step="5" value="20" aria-label="빈칸 비율">
+          <p class="label">빈칸 양: <span id="ratioLabel" style="color:var(--accent);"></span></p>
+          <input id="ratio" type="range" min="5" max="50" step="5" value="15" aria-label="빈칸 양">
           <div class="muted" style="display:flex; justify-content:space-between;"><span>적게</span><span>많이</span></div>
         </div>
+        <div id="grammarPanel">
+          <p class="label">어떤 표현을 고를까요?</p>
+          <label class="choice"><input id="cFn" type="checkbox" checked><span>접속사·전치사·의문사 <span class="muted">(and, of, when, what)</span></span></label>
+          <label class="choice"><input id="cPhrase" type="checkbox" checked><span>숙어·구동사·짝꿍 표현 <span class="muted">(fond of, find out)</span></span></label>
+          <label class="choice"><input id="cVerb" type="checkbox" checked><span>동사 덩어리 <span class="muted">(will be, was watching, to write)</span></span></label>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;">
+        <p class="label">꼭 빈칸으로 만들 표현 <span class="opt">(선택)</span></p>
+        <p class="muted" style="margin:0 0 12px;">단어나 표현을 한 줄에 하나씩 적으세요. 문서에서 찾으면 무조건 빈칸으로 만듭니다.</p>
+        <textarea id="refInput" rows="3" placeholder="예) fond of&#10;in order to&#10;experience"></textarea>
+        <div class="row-wrap" style="margin-top:12px;">
+          <label class="btn btn-plain" for="refFile" style="cursor:pointer;">텍스트 파일(.txt)에서 불러오기</label>
+          <input id="refFile" type="file" accept=".txt,text/plain" hidden>
+        </div>
+      </div>
+
+      <div id="vocabPanel" class="grid-2" style="margin-top:28px;" hidden>
         <div>
           <p class="label">빈칸 대상</p>
           <label class="choice"><input id="tKo" type="checkbox" checked><span>한글 단어 (명사 위주)</span></label>
           <label class="choice"><input id="tEn" type="checkbox" checked><span>영어 단어</span></label>
           <label class="choice"><input id="tNum" type="checkbox"><span>숫자</span></label>
+          <label class="choice" style="margin-top:12px;"><input id="allOcc" type="checkbox" checked><span>같은 단어는 모두 빈칸으로</span></label>
         </div>
         <div style="display:flex; flex-direction:column; gap:20px;">
           <div>
@@ -212,9 +219,6 @@
               <option value="4">4글자 이상</option>
             </select>
           </div>
-        </div>
-        <div>
-          <label class="choice"><input id="allOcc" type="checkbox" checked><span>같은 단어는 모두 빈칸으로</span></label>
         </div>
       </div>
     </div>
@@ -266,7 +270,7 @@
     <textarea id="copyArea" rows="8" readonly hidden aria-label="복사할 글"></textarea>
   </section>
 
-  <p class="muted" style="text-align:center; margin:0; font-size:1rem;">밑줄 친 단어의 일부만 밑줄이 쳐져 있어도 단어 전체가 빈칸이 됩니다. 결과는 저장하기 전에 한 번 확인해 주세요.</p>
+  <p class="muted" style="text-align:center; margin:0; font-size:1rem;">자동으로 고른 자리는 선생님이 고른 것과 다를 수 있습니다. 마음에 안 들면 "다시 섞기"를 누르거나, Word에서 밑줄을 직접 친 뒤 다시 올려 주세요.</p>
 </main>
 
 <script>
@@ -468,6 +472,139 @@
     });
     return { prob, ans, answers, total: answers.length };
   }
+
+  /* ---- guess where a teacher would underline in English text ---- */
+  const setOf = s => new Set(s.split(/\s+/).filter(Boolean));
+  const G_CONJ_MID = setOf('because although though while whereas if unless until since when whenever as once before after than whether');
+  const G_CONJ_SIMPLE = setOf('and but or so nor either neither both');
+  const G_CONNECT = setOf('however therefore moreover actually finally instead otherwise besides meanwhile thus hence furthermore nevertheless anyway indeed');
+  const G_REL = setOf('that which who whom whose what where why how whatever whoever whichever');
+  const G_PREP = setOf('of in on at by for with from about into through over under during between among against without within toward towards across along around beyond despite near upon off onto like');
+  const G_MODAL = setOf("will would can could shall should may might must can't couldn't won't wouldn't shouldn't mustn't cannot");
+  const G_BE = setOf("am is are was were be been being isn't aren't wasn't weren't");
+  const G_HAVE = setOf("have has had haven't hasn't hadn't");
+  const G_ADV = setOf('not never always also still just really often only even already ever yet');
+  const G_NONVERB = setOf('the a an my your his her its our their this that these those him them us me you it he she we they i who whom whose which what there here very lot some any no every each all both another much many most more several few little other such and or but nor so yet of in on at by for with from about into through over under to than as if when while where how why one two three four five six seven eight nine ten first second last next same own');
+  const G_OBJ = setOf('it them me him her us you this that');
+  const G_REFL = setOf('myself yourself himself herself itself ourselves yourselves themselves oneself');
+  const G_PREV_INF = setOf('used able about going ought have has had supposed allowed likely willing unable');
+  const G_PREP_ING = setOf('by in of after before without for about from on at through while when since until instead');
+  const G_SEPARABLE = setOf('up out off on down away back in over');
+  const G_REPORT = setOf('suggest advise say tell think believe know realize realise discover find hope wish agree claim explain show prove notice remember learn mean feel promise insist recommend demand propose require admit argue ensure expect imagine suppose decide understand see hear');
+  const G_IRR_PP = setOf('known taken done seen given written made found told built held kept left lost brought bought caught taught thought begun broken chosen driven eaten fallen forgotten gone grown hidden ridden risen shaken spoken stolen thrown worn won become sold sent spent shown slept understood woken fought met paid said heard led got gotten drawn sung flown torn');
+  const G_NOT_ING = setOf('thing something anything nothing everything morning evening during king ring sing string spring wing ceiling sibling');
+  const G_NOT_ED = setOf('need speed feed seed indeed bleed breed proceed exceed succeed hundred embed');
+  const G_IRR = {was:'be',were:'be',is:'be',are:'be',am:'be',been:'be',being:'be',did:'do',does:'do',done:'do',had:'have',has:'have',went:'go',gone:'go',goes:'go',took:'take',taken:'take',made:'make',saw:'see',seen:'see',got:'get',gotten:'get',gave:'give',given:'give',found:'find',told:'tell',said:'say',felt:'feel',kept:'keep',left:'leave',thought:'think',brought:'bring',began:'begin',begun:'begin',came:'come',knew:'know',known:'know',wrote:'write',written:'write',spoke:'speak',spoken:'speak',ran:'run',sat:'sit',stood:'stand',held:'hold',led:'lead',met:'meet',paid:'pay',sent:'send',spent:'spend',built:'build',bought:'buy',caught:'catch',taught:'teach',chose:'choose',chosen:'choose',drew:'draw',drawn:'draw',drove:'drive',driven:'drive',ate:'eat',eaten:'eat',fell:'fall',fallen:'fall',flew:'fly',flown:'fly',forgot:'forget',forgotten:'forget',grew:'grow',grown:'grow',hid:'hide',hidden:'hide',lost:'lose',rose:'rise',risen:'rise',sold:'sell',shook:'shake',shaken:'shake',sang:'sing',sung:'sing',slept:'sleep',threw:'throw',thrown:'throw',understood:'understand',woke:'wake',woken:'wake',wore:'wear',worn:'wear',won:'win',broke:'break',broken:'break',fought:'fight',hung:'hang',lent:'lend',rode:'ride',ridden:'ride',stole:'steal',stolen:'steal',tore:'tear',torn:'tear',heard:'hear',swam:'swim',swum:'swim',shot:'shoot',blew:'blow',blown:'blow',dealt:'deal',meant:'mean',sought:'seek'};
+  const PH_LIST = 'take on|take off|take up|take over|take care of|take part in|take place|put on|put off|put out|put up|put into|put away|put down|pick up|pick out|find out|figure out|give up|give out|give away|look up|look after|look into|look forward to|look out|look around|turn on|turn off|turn into|turn out|turn down|turn up|come up with|come across|come back|come out|go on|go out|go through|go over|get up|get along|get over|get through|get back|get used to|make up|make out|make sure|carry out|break down|break out|break up|bring up|bring out|bring about|call off|call on|call for|check out|cut off|cut down|end up|fill in|fill out|hand in|hand out|hold on|hold up|keep up|keep on|let down|run out|run into|run away|set up|set out|set off|show up|show off|sit down|stand up|stand for|work out|write down|live up to|grow up|deal with|catch up|clean up|cheer up|count on|depend on|face up to|pay attention to|make use of|try on|try out|think about|think of|wake up|sign up|slow down|speed up|throw away|throw out|use up|add up|ask for|apply for|wait for|search for|care for|prepare for|belong to|lead to|refer to|listen to|react to|respond to|contribute to|result in|succeed in|believe in|participate in|focus on|rely on|insist on|agree with|cope with|suffer from|differ from|protect from|escape from|look at|laugh at|arrive at|smile at|shout at|stare at|aim at|' +
+    'fond of|proud of|afraid of|scared of|tired of|full of|capable of|aware of|ashamed of|short of|good at|bad at|excellent at|surprised at|interested in|involved in|successful in|rich in|worried about|concerned about|excited about|sure about|careful about|passionate about|curious about|crazy about|nervous about|anxious about|worry about|care about|talk about|dream about|concern about|passion for|famous for|responsible for|ready for|late for|thankful for|grateful for|known for|sorry for|reason for|need for|exposed to|similar to|close to|kind to|married to|used to|accustomed to|addicted to|devoted to|friendly with|angry with|pleased with|satisfied with|bored with|familiar with|busy with|filled with|covered with|different from|absent from|based on|keen on|opportunity to|chance to|ability to|way to|able to|about to|going to|have to|has to|ought to';
+  const MW_LIST = 'in order to|as well as|such as|thanks to|out of|instead of|because of|according to|as soon as|as long as|so that|rather than|in addition to|in addition|at first|at least|at all|at last|just like|more and more|less and less|one by one|after all|in fact|for example|for instance|on the other hand|as a result|in particular|in general|by the way|no longer|not only|but also|as if|even though|even if|in spite of|due to|owing to|in front of|next to|as for|a lot of|lots of|a number of|a kind of|a sort of|a sense of|a waste of|out of breath|from now on|once more|again and again|over and over|all the time|at the same time|at times|of course|so far|by far|at once|in time|on time|in the future|in the end|by the time|each other|one another|a variety of|a couple of|a series of|kind of|sort of|as much as|as many as|more than|less than|so as to';
+  const G_HT = new Map();
+  PH_LIST.split('|').forEach(e => { const p = e.trim().split(/\s+/); if (!G_HT.has(p[0])) G_HT.set(p[0], []); G_HT.get(p[0]).push(p.slice(1)); });
+  const G_MW = new Map();
+  MW_LIST.split('|').forEach(e => { const p = e.trim().split(/\s+/); if (!G_MW.has(p[0])) G_MW.set(p[0], []); G_MW.get(p[0]).push(p); });
+
+  const gIsIng = w => /ing$/.test(w) && w.length >= 5 && !G_NOT_ING.has(w);
+  const gIsPP = w => G_IRR_PP.has(w) || (/ed$/.test(w) && w.length >= 4 && !G_NOT_ED.has(w));
+  function lemmas(w) {
+    const out = new Set([w]); if (G_IRR[w]) out.add(G_IRR[w]);
+    const add = x => { if (x.length >= 2) out.add(x); };
+    if (/ies$/.test(w)) add(w.slice(0, -3) + 'y');
+    if (/ied$/.test(w)) add(w.slice(0, -3) + 'y');
+    if (/(s|x|z|ch|sh)es$/.test(w)) add(w.slice(0, -2));
+    if (/s$/.test(w) && !/ss$/.test(w)) add(w.slice(0, -1));
+    if (/ed$/.test(w)) { add(w.slice(0, -2)); add(w.slice(0, -1)); if (/(.)\1ed$/.test(w)) add(w.slice(0, -3)); }
+    if (/ing$/.test(w)) { add(w.slice(0, -3)); add(w.slice(0, -3) + 'e'); if (/(.)\1ing$/.test(w)) add(w.slice(0, -4)); }
+    return [...out];
+  }
+  const wordsOf = str => (str.match(/[A-Za-z]+(?:['’][A-Za-z]+)*/g) || []).map(x => x.toLowerCase().replace(/’/g, "'"));
+
+  function gCandidates(s, refs) {
+    const toks = []; const re = /[A-Za-z]+(?:['’][A-Za-z]+)*/g; let m;
+    while ((m = re.exec(s))) toks.push({ w: m[0].toLowerCase().replace(/’/g, "'"), raw: m[0], start: m.index, end: m.index + m[0].length });
+    const n = toks.length, cands = [];
+    const contig = (a, b) => { for (let k = a; k < b; k++) if (!/^[ \u00a0]+$/.test(s.slice(toks[k].end, toks[k + 1].start))) return false; return true; };
+    const push = (a, b, score, cat) => { if (a < 0 || b >= n || b < a || !contig(a, b)) return; cands.push({ a, b, score: score + 0.3 * (b - a), cat }); };
+    const initial = i => i === 0 || /[.!?]["'”’)\]]*\s*["'“‘(]*$/.test(s.slice(toks[i - 1].end, toks[i].start));
+    const tw = k => (toks[k] ? toks[k].w : '');
+    const seqAt = (i, seq) => { for (let k = 0; k < seq.length; k++) if (tw(i + k) !== seq[k]) return false; return true; };
+    for (let i = 0; i < n; i++) {
+      const w = toks[i].w, init = initial(i), L = lemmas(w);
+      (refs || []).forEach(seq => { if (seqAt(i, seq)) push(i, i + seq.length - 1, 20, 'ref'); });
+      (G_MW.get(w) || []).forEach(seq => { if (seqAt(i, seq)) push(i, i + seq.length - 1, 10, 'phrase'); });
+      L.forEach(l => (G_HT.get(l) || []).forEach(tail => {
+        if (seqAt(i + 1, tail)) { const e = i + tail.length; push(i, e, 10, 'phrase'); if (tw(e + 1) === 'that') push(i, e + 1, 11, 'phrase'); }
+        else if (tail.length === 1 && G_SEPARABLE.has(tail[0]) && G_OBJ.has(tw(i + 1)) && tw(i + 2) === tail[0]) push(i, i + 2, 10, 'phrase');
+      }));
+      if (L.some(l => G_REPORT.has(l))) {
+        if (tw(i + 1) === 'that') push(i, i + 1, 9, 'phrase');
+        else if (G_OBJ.has(tw(i + 1)) && tw(i + 2) === 'that') push(i, i + 2, 9, 'phrase');
+      }
+      if (G_MODAL.has(w)) {
+        let j = i + 1; while (G_ADV.has(tw(j))) j++;
+        if (tw(j) === 'have' || tw(j) === 'be') j++;
+        if (tw(j) === 'been') j++;
+        const last = (toks[j] && !G_NONVERB.has(tw(j))) ? j : j - 1;
+        if (last > i) push(i, last, 8, 'verb');
+      }
+      if (G_BE.has(w)) {
+        let j = i + 1; while (tw(j) === 'not' || tw(j) === 'never' || tw(j) === 'just') j++;
+        if (toks[j] && (gIsIng(tw(j)) || gIsPP(tw(j)))) push(i, j, 8, 'verb');
+      }
+      if (G_HAVE.has(w)) {
+        let j = i + 1; while (G_ADV.has(tw(j))) j++;
+        let been = false; if (tw(j) === 'been') { been = true; j++; }
+        if (toks[j] && (gIsPP(tw(j)) || (been && gIsIng(tw(j))))) push(i, j, 8, 'verb');
+        else if (been) push(i, j - 1, 8, 'verb');
+      }
+      if (w === 'to') {
+        const nx = toks[i + 1];
+        if (nx && !G_NONVERB.has(nx.w) && !/^[A-Z]/.test(nx.raw) && contig(i, i + 1)) {
+          let b = i + 1;
+          if (nx.w === 'have' || nx.w === 'be') { b = i + 2; if (tw(b) === 'been') b++; if (!(toks[b] && !G_NONVERB.has(tw(b)))) b--; }
+          if (b + 1 < n && G_REFL.has(tw(b + 1))) b++;
+          push(i, b, 8, 'verb');
+          if (i > 0 && G_PREV_INF.has(tw(i - 1))) push(i - 1, b, 9, 'phrase');
+        } else push(i, i, 3, 'fn');
+      }
+      if (G_PREP_ING.has(w) && toks[i + 1] && gIsIng(tw(i + 1))) push(i, i + 1, 8, 'verb');
+      if (G_REFL.has(w) && i > 0 && !G_PREP.has(tw(i - 1)) && !G_NONVERB.has(tw(i - 1))) push(i - 1, i, 7, 'verb');
+      if (G_CONNECT.has(w)) push(i, i, init ? 8 : 5, 'fn');
+      if (G_CONJ_MID.has(w)) push(i, i, init ? 8 : (w === 'before' || w === 'after' || w === 'than' ? 5 : 7), 'fn');
+      if (G_CONJ_SIMPLE.has(w)) push(i, i, init ? 8 : 4, 'fn');
+      if (G_REL.has(w)) push(i, i, 6, 'fn');
+      if (G_PREP.has(w)) push(i, i, 3, 'fn');
+    }
+    return { toks, cands };
+  }
+
+  // paras: [{s}], o: { ratio, fn, phrase, verb, refs, rand }
+  function grammarRanges(paras, o) {
+    let carry = 0, spans = 0;
+    const ranges = paras.map(P => {
+      const { toks, cands } = gCandidates(P.s, o.refs);
+      carry += toks.length * o.ratio / 100;
+      const budget = Math.max(0, Math.round(carry));
+      const list = cands.filter(c => c.cat === 'ref' || o[c.cat]);
+      list.forEach(c => { c.sc = c.score + o.rand() * 1.5; });
+      list.sort((x, y) => y.sc - x.sc);
+      const used = new Set(), chosen = []; let words = 0;
+      for (const c of list) {
+        const cnt = c.b - c.a + 1, isRef = c.cat === 'ref';
+        if (!isRef && words >= budget) break;
+        if (!isRef && cnt > Math.max(budget + 1, 2)) continue;
+        let clash = false; for (let k = c.a; k <= c.b; k++) if (used.has(k)) { clash = true; break; }
+        if (clash) continue;
+        for (let k = c.a; k <= c.b; k++) used.add(k);
+        chosen.push(c); words += cnt;
+      }
+      carry -= words; spans += chosen.length;
+      const R = [];
+      chosen.forEach(c => { for (let k = c.a; k <= c.b; k++) R.push({ start: toks[k].start, end: toks[k].end }); });
+      R.sort((x, y) => x.start - y.start);
+      return R;
+    });
+    return { ranges, spans };
+  }
 /*PURE-END*/
 
   /* ---------- small helpers ---------- */
@@ -479,11 +616,11 @@
   const SAMPLE_REF = '';
   const SAMPLE_SRC = [
     '# A Short Talk About Reading',
-    'Hi, everyone. My name is Hana, [[and]] I am the leader [[of]] a school reading club. I am glad [[to have been invited]] to give a talk. Many students [[ask me about]] good books, so today I will talk about the value [[of reading]] every day.',
+    'Hi, everyone. My name is Hana, and I am the leader of a school reading club. I am glad to have been invited to give a talk. Many students send me messages with questions about good books, so today I will talk about the value of reading every day.',
     '',
-    '# I was [[fond of]] comics',
-    'One rainy afternoon, I [[was looking for]] a quiet place to rest. I found a small library [[and decided to]] go inside. Reading was difficult [[at first]], [[but]] after a few months, I became a fast reader. I felt tired [[but]] happy [[when I was]] finished with each book. [[Whenever]] I finished one, I [[told myself]], “Keep going.”'
-  ].join('\n');
+    '# I was fond of comics',
+    'One rainy afternoon, I was looking for a quiet place to rest. I found a small library and decided to go inside. Reading was difficult at first, but after a few months, I became a fast reader. I felt tired but happy when I was finished with each book. Whenever I finished one, I told myself, “Keep going.”'
+  ].join('\\n');
 
   let seed = Math.floor(Math.random() * 1e9);
   let model = null;          // { paras, baseSz } from docx / sample / pasted text
@@ -551,7 +688,7 @@
   }
   function opts() {
     return {
-      mode: document.querySelector('input[name=mode]:checked').value,
+      mode: 'both',
       ratio: +$('ratio').value,
       ko: $('tKo').checked, en: $('tEn').checked, num: $('tNum').checked,
       freq: $('freq').value, minLen: +$('minLen').value,
@@ -609,32 +746,49 @@
   let underCount = 0;
   const method = () => document.querySelector('input[name=method]:checked').value;
   function currentModel() { return fromDocx && model ? model : plainModel($('srcInput').value); }
+  const refLines = () => $('refInput').value.split('\n').map(wordsOf).filter(a => a.length);
 
-  function refreshMethod(preferUnderline) {
+  function updateRatioLabel() {
+    const v = $('ratio').value;
+    $('ratioLabel').textContent = method() === 'vocab' ? `고를 수 있는 단어 중 ${v}%` : `문서 전체 단어의 약 ${v}%`;
+  }
+  function syncPanels() {
+    const mt = method();
+    $('autoPanel').hidden = mt === 'underline';
+    $('grammarPanel').hidden = mt !== 'grammar';
+    $('vocabPanel').hidden = mt !== 'vocab';
+    $('btnReshuffle').hidden = mt === 'underline';
+    updateRatioLabel();
+  }
+  function refreshMethod(repick) {
     const m = currentModel();
     underCount = m.paras.reduce((n, P) => n + underlineRanges(P).length, 0);
-    const uRadio = document.querySelector('input[name=method][value=underline]');
-    const aRadio = document.querySelector('input[name=method][value=auto]');
-    uRadio.disabled = underCount === 0;
-    if (underCount === 0) {
-      aRadio.checked = true;
-      say('methodNote', m.paras.length ? '이 문서에는 밑줄 친 부분이 없어서 자동으로 고르는 방법을 사용합니다.' : '');
-    } else {
-      if (preferUnderline) uRadio.checked = true;
-      say('methodNote', `밑줄 친 단어가 ${underCount}개 있습니다.`);
-    }
-    $('autoPanel').hidden = method() !== 'auto';
-    $('btnReshuffle').hidden = method() !== 'auto';
+    const text = m.paras.map(P => P.s).join(' ');
+    const ko = (text.match(/[가-힣]/g) || []).length, en = (text.match(/[A-Za-z]/g) || []).length;
+    const pick = v => { document.querySelector(`input[name=method][value=${v}]`).checked = true; };
+    document.querySelector('input[name=method][value=underline]').disabled = underCount === 0;
+    if (repick) pick(underCount > 0 ? 'underline' : (ko > en ? 'vocab' : 'grammar'));
+    else if (underCount === 0 && method() === 'underline') pick(ko > en ? 'vocab' : 'grammar');
+    let note = '';
+    if (!m.paras.length) note = '';
+    else if (underCount > 0) note = `이 문서에는 밑줄 친 단어가 ${underCount}개 있어서 그 부분을 빈칸으로 만듭니다. 다른 방법을 고르면 밑줄을 무시하고 자동으로 고릅니다.`;
+    else if (method() === 'grammar' && ko > en) note = '한글이 많은 문서는 "핵심 단어 중심"이 더 잘 맞습니다.';
+    else note = '밑줄이 없는 문서여서 프로그램이 빈칸 자리를 자동으로 고릅니다.';
+    say('methodNote', note);
+    syncPanels();
   }
 
   function generate() {
     const m = currentModel();
-    $('autoPanel').hidden = method() !== 'auto';
-    $('btnReshuffle').hidden = method() !== 'auto';
-    let rr, candidates = null;
-    if (method() === 'underline') rr = m.paras.map(underlineRanges);
-    else { const a = autoRanges(m.paras, opts(), $('refInput').value); rr = a.ranges; candidates = a.candidates; }
-    cur = { ...buildSheets(m.paras, rr), baseSz: m.baseSz, method: method(), candidates, hasText: m.paras.some(P => P.chars.length) };
+    syncPanels();
+    const mt = method();
+    let rr, spans = null, candidates = null;
+    if (mt === 'underline') rr = m.paras.map(underlineRanges);
+    else if (mt === 'grammar') {
+      const g = grammarRanges(m.paras, { ratio: +$('ratio').value, fn: $('cFn').checked, phrase: $('cPhrase').checked, verb: $('cVerb').checked, refs: refLines(), rand: rng });
+      rr = g.ranges; spans = g.spans;
+    } else { const a = autoRanges(m.paras, opts(), $('refInput').value); rr = a.ranges; candidates = a.candidates; }
+    cur = { ...buildSheets(m.paras, rr), baseSz: m.baseSz, method: mt, spans, candidates, hasText: m.paras.some(P => P.chars.length) };
     renderPreview();
   }
 
@@ -693,8 +847,10 @@
     box.querySelectorAll('.blank-input').forEach(inp => inp.addEventListener('input', () => {
       inp.classList.toggle('ok', inp.value.trim().toLowerCase() === inp.dataset.a.toLowerCase());
     }));
-    if (cur.total === 0) say('stats', cur.method === 'underline' ? '밑줄 친 부분이 없어서 빈칸이 없습니다.' : '빈칸으로 만들 단어를 찾지 못했습니다. 설정을 바꿔 보세요.');
-    else say('stats', cur.method === 'underline' ? `밑줄 친 단어 ${cur.total}개를 빈칸으로 만들었습니다.` : `빈칸 ${cur.total}개 · 빈칸이 될 수 있는 단어 ${cur.candidates}종류`);
+    if (cur.total === 0) say('stats', cur.method === 'underline' ? '밑줄 친 부분이 없어서 빈칸이 없습니다.' : '빈칸으로 만들 부분을 찾지 못했습니다. 빈칸 양을 늘리거나 설정을 바꿔 보세요.');
+    else if (cur.method === 'underline') say('stats', `밑줄 친 단어 ${cur.total}개를 빈칸으로 만들었습니다.`);
+    else if (cur.method === 'grammar') say('stats', `문법·표현 ${cur.spans}곳, 빈칸 ${cur.total}개를 골랐습니다.`);
+    else say('stats', `빈칸 ${cur.total}개 · 빈칸이 될 수 있는 단어 ${cur.candidates}종류`);
     $('btnViewP').setAttribute('aria-pressed', view === 'problem');
     $('btnViewA').setAttribute('aria-pressed', view === 'answer');
   }
@@ -728,7 +884,7 @@
       setSample(false);
       refreshMethod(true);
       generate();
-      showFileInfo(`${file.name} · 문단 ${model.paras.length}개 · ${underCount ? '밑줄 친 단어 ' + underCount + '개' : '밑줄 없음'}`);
+      showFileInfo(`${file.name} · 문단 ${model.paras.length}개 · ${underCount ? '밑줄 친 단어 ' + underCount + '개' : '밑줄 없음 (자동으로 빈칸 생성)'}`);
       say('fileStatus', '불러오기 완료');
       $('preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
@@ -843,7 +999,7 @@
   $('btnReshuffle').onclick = () => { seed = Math.floor(Math.random() * 1e9); generate(); };
   $('btnViewP').onclick = () => { view = 'problem'; renderPreview(); };
   $('btnViewA').onclick = () => { view = 'answer'; renderPreview(); };
-  $('ratio').oninput = () => { $('ratioLabel').textContent = $('ratio').value + '%'; regen(); };
+  $('ratio').oninput = () => { updateRatioLabel(); regen(); };
   $('refInput').addEventListener('input', () => { store.set(REF_KEY, $('refInput').value); regen(); });
   $('headerText').addEventListener('input', () => store.set(HEAD_KEY, $('headerText').value));
   $('srcInput').addEventListener('input', () => {
@@ -851,8 +1007,8 @@
     baseName = '붙여넣은글';
     refreshMethod(false); regen();
   });
-  ['tKo', 'tEn', 'tNum', 'freq', 'minLen', 'allOcc'].forEach(id => $(id).addEventListener('change', regen));
-  document.querySelectorAll('input[name=mode],input[name=style],input[name=method]').forEach(e => e.addEventListener('change', generate));
+  ['tKo', 'tEn', 'tNum', 'freq', 'minLen', 'allOcc', 'cFn', 'cPhrase', 'cVerb'].forEach(id => $(id).addEventListener('change', regen));
+  document.querySelectorAll('input[name=style],input[name=method]').forEach(e => e.addEventListener('change', generate));
 
   $('refFile').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
@@ -902,3 +1058,4 @@
 </script>
 </body>
 </html>
+
